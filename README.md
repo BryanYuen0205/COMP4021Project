@@ -1,1 +1,1 @@
-# Start of the COMP4021 Project
+# COMP4021 Project
