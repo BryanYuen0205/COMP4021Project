@@ -63,12 +63,12 @@ const Authentication = (function() {
         .then((response) => response.json())
         .then((json) => {
             if(json.status == "success"){
-                // console.log("client user validated");
+                console.log("client user validated");
                 user = json.user;
                 onSuccess();
             }
             else if(onError){
-                // console.log("client no user validated");
+                console.log("client no user validated");
                 onError(json.error);
             }            
         })

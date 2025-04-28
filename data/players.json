@@ -6,5 +6,9 @@
  "bob": {
   "name": "bob",
   "password": "$2b$10$aoE.qqMLr76/Tr8zFxu8rOy1QXgNQBz.ajIleDO./5oyrczeowcIy"
+ },
+ "bryan": {
+  "name": "bryan",
+  "password": "$2b$10$KpN.cF7r82RGQy5PST9SkOVV6f4/pRfiIu0owU9mOwhcmTkvtzmm."
  }
 }

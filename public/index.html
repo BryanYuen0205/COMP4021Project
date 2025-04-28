@@ -49,24 +49,27 @@
   <script src="scripts/socket.js"></script>
   <script src="scripts/ui.js"></script>
   <script src="scripts/registration.js"></script>
+  <script src="scripts/authentication.js"></script>
   <script>
     $(function() {
       // Initialize the UI
       UI.initialize();
 
-        // Validate the signin
-      // Authentication.validate(
-      //       () => {
-      //             SignInForm.hide();
-      //         UserPanel.update(Authentication.getUser());
-      //         UserPanel.show();
+      // Validate the signin
+      Authentication.validate(
+          () => {
+            console.log("here here");
+            
+            SignInForm.hide();
+            // UserPanel.update(Authentication.getUser());
+            // UserPanel.show();
 
-      //         Socket.connect();
-      //     },
-      //     () => { SignInForm.show(); }
-      // );
-      Socket.connect();
-      SignInForm.show();
+            Socket.connect();
+          },
+          () => { SignInForm.show(); }
+      );
+      // Socket.connect();
+      // SignInForm.show();
     });
   </script>
 </body>

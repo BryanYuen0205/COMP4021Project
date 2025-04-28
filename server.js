@@ -4,6 +4,7 @@ const fs = require("fs");
 const session = require("express-session");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const { log } = require("console");
 const onlineUsers = {};
 
 // Create the Express app
@@ -16,6 +17,17 @@ app.use(express.static("public"));
 
 // Use the json middleware to parse JSON data
 app.use(express.json());
+
+// Use the session middleware to maintain sessions
+const chatSession = session({
+    secret: "game",
+    resave: false,
+    saveUninitialized: false,
+    rolling: true,
+    cookie: { maxAge: 300000 }
+});
+app.use(chatSession);
+
 
 // This helper function checks whether the text only contains word characters
 function containWordCharsOnly(text) {
@@ -69,7 +81,68 @@ app.post("/register", (req, res) => {
     // res.json({ status: "error", error: "This endpoint is not yet implemented." });
 });
 
+    // Handle the /signin endpoint
+app.post("/signin", (req, res) => {
+    
+    // Get the JSON data from the body
+    const { username, password } = req.body;
+
+    //
+    // D. Reading the users.json file
+    //
+    let users = JSON.parse(fs.readFileSync("data/players.json"));
+    //
+    // E. Checking for username/password
+    //
+    if(!(username in users))
+        return res.json({status:"error", error: "User does not exist. Please register for an account!"});
+    const hashedPassword = users[username].password;
+    if(!bcrypt.compareSync(password, hashedPassword))
+        return res.json({status:"error", error: "Incorrect password. Please try again!"});
+    
+    //
+    // G. Sending a success response with the user account
+    //
+    const user = {username: username, name: users[username].name}
+    // console.log(user);
+    req.session.user = user;
+    res.json({status:"success", user: user});
+    // Delete when appropriate
+    // res.json({ status: "error", error: "This endpoint is not yet implemented." });
+});
+
+// Handle the /validate endpoint
+app.get("/validate", (req, res) => {
+
+    //
+    // B. Getting req.session.user
+    //
+    console.log("At the validate endpoint");
+    
+    const sessionUser = req.session.user;
+    console.log(sessionUser);
+    
+    //
+    // D. Sending a success response with the user account
+    //
+    if(sessionUser){
+        // console.log("server user validated");
+        return res.json({status:"success", user:sessionUser});
+    }
+    // console.log("server no user validated");
+    
+    res.json({ status: "error", error: "error" });
+    // Delete when appropriate
+    // res.json({ status: "error", error: "This endpoint is not yet implemented." });
+});
+
+io.use((socket, next) => {
+    chatSession(socket.request, {}, next);
+});
+
+
 io.on("connection", (socket) => {
+    console.log(socket.request.session.user);
     socket.emit("greeting");
 })
 
