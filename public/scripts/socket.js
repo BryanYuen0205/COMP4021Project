@@ -17,7 +17,7 @@ const Socket = (function() {
         });
 
         socket.on("greeting", () => {
-            console.log("Browser side ok!");
+            console.log("Received message from server ok!");
         })
     };
 

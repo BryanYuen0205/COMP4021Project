@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Multiplayer Game Test</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link href="style.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; }
     #status { color: green; font-weight: bold; }
@@ -11,13 +13,61 @@
 <body>
   <h1>Multiplayer Game Server Test</h1>
   <div id="status">Connecting...</div>
-  <div id="messages"></div>
+  <div id="signin-overlay" class="overlay row">
+    <div class="content shadow row">
+        <form id="signin-form" class="col">
+            <div class="caption">SIGN IN WITH YOUR ACCOUNT</div>
+            <div class="spacer-0"></div>
+            <input id="signin-username" placeholder="Enter your username"></input>
+            <input id="signin-password" type="password" placeholder="Enter your password"></input>
+            <div class="spacer-0"></div>
+            <button type="submit">Sign In</button>
+            <div id="signin-message" class="warning center"></div>
+            <div class="spacer-grow"></div>
+        </form>
 
-  <!-- Socket.IO client script (served from the server) -->
+        <div class="spacer-0"></div>
+
+        <form id="register-form" class="col">
+            <div class="caption">OR, REGISTER IF YOU DO NOT HAVE ONE</div>
+            <div class="spacer-0"></div>
+            <input id="register-username" maxlength="10" placeholder="Enter your username"></input>
+            <!-- <select id="register-avatar">
+                <option value="">Select your avatar</option>
+            </select> -->
+            <input id="register-name" maxlength="16" placeholder="Enter your name"></input>
+            <input id="register-password" type="password" placeholder="Enter your password"></input>
+            <input id="register-confirm" type="password" placeholder="Enter your password again"></input>
+            <div class="spacer-0"></div>
+            <button type="submit">Register</button>
+            <div id="register-message" class="warning center"></div>
+        </form>
+    </div>
+  </div>
+  <div id="messages"></div>
   <script src="/socket.io/socket.io.js"></script>
   <script src="scripts/socket.js"></script>
+  <script src="scripts/ui.js"></script>
+  <script src="scripts/registration.js"></script>
   <script>
-    Socket.connect();
+    $(function() {
+      // Initialize the UI
+      UI.initialize();
+
+        // Validate the signin
+      // Authentication.validate(
+      //       () => {
+      //             SignInForm.hide();
+      //         UserPanel.update(Authentication.getUser());
+      //         UserPanel.show();
+
+      //         Socket.connect();
+      //     },
+      //     () => { SignInForm.show(); }
+      // );
+      Socket.connect();
+      SignInForm.show();
+    });
   </script>
 </body>
 </html>

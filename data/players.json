@@ -1,0 +1,10 @@
+{
+ "tony": {
+  "name": "Tony Lee",
+  "password": "$2b$10$Yxb2fSgA5RFn9Oz9TxjLLuve/GiPXCs2DWVFhyFDr4qz39qglwp8e"
+ },
+ "bob": {
+  "name": "bob",
+  "password": "$2b$10$aoE.qqMLr76/Tr8zFxu8rOy1QXgNQBz.ajIleDO./5oyrczeowcIy"
+ }
+}
