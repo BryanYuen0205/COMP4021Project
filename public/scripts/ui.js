@@ -74,6 +74,30 @@ const SignInForm = (function() {
     return { initialize, show, hide };
 })();
 
+const Menu = (function(){
+    // Click event for the Single Player button
+    const initialize = function(){
+        $("#singleplayer-button").on("click", () => {
+            console.log("sp button clicked bro");
+        })
+
+        $("#multiplayer-button").on("click", () => {
+            console.log("mp button clicked bro");
+        })
+
+        $("#instructions-button").on("click", () => {
+            console.log("instructions button clicked bro");
+        })
+
+        $("#signout-button").on("click", () => {
+            console.log("signout button clicked bro");
+        })
+    };
+
+    // return {initialize,hi};
+    return {initialize};
+})();
+
 // const UserPanel = (function() {
 //     // This function initializes the UI
 //     const initialize = function() {
@@ -257,7 +281,7 @@ const UI = (function() {
 
     // The components of the UI are put here
     // const components = [SignInForm, UserPanel, OnlineUsersPanel, ChatPanel];
-    const components = [SignInForm];
+    const components = [SignInForm, Menu];
 
     // This function initializes the UI
     const initialize = function() {

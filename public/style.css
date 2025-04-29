@@ -28,13 +28,16 @@
     --button-background-hover: #f8b58b;
 }
 * {
-    font-family: "Abel", sans-serif;
+    /* font-family: "Abel", sans-serif; */
+    font-family: "Press Start 2P", sans-serif;
     color: var(--font-color);
     box-sizing: border-box;
 }
 
 /* Basic */
 body {
+    /* font-family: "Press Start 2P", sans-serif; */
+    font-family: "Press Start 2P", sans-serif;
     min-width: 600px;
     min-height: 300px;
     height: 100vh;
@@ -111,7 +114,7 @@ button:hover {
     background: var(--button-background-hover);
 }
 button:active {
-    margin: 2px -2px -2px 2px;
+    /* margin: 2px -2px -2px 2px; */
     box-shadow: 0px 0px;
 }
 button.icon {
@@ -166,7 +169,8 @@ button.icon:active {
     padding: 0 20px;
 }
 #title {
-    font-family: Abel, sans-serif;
+    /* font-family: Abel, sans-serif; */
+    font-family: "Press Start 2P", sans-serif;
     font-size: 300%;
     text-transform: uppercase;
     color: var(--title-color);
@@ -256,3 +260,45 @@ button.icon:active {
     width: 270px;
     align-self: stretch;
 }
+
+/* #game-container {
+    position: relative;
+}
+canvas, #counter, #game-start, #game-over {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+canvas, #game-start, #game-over {
+    border: 1px solid gray;
+    width: 854px;
+    height: 480px;
+}
+canvas {
+    background: url(background.png);
+    background-size: cover;
+}
+#game-start, #game-over {
+    background: rgba(1, 1, 1, 0.8);
+}
+#counter text {
+    font-size: 130%;
+    fill: white;
+    stroke: black;
+    stroke-width: 1px;
+}
+#game-start text {
+    font-size: 150%;
+    fill: white;
+    text-anchor: middle;
+}
+#game-start #game-title {
+    font-size: 400%;
+    fill: url(#title-fill);
+    stroke: black;
+}
+#game-over text {
+    font-size: 120%;
+    fill: url(#game-over-fill);
+    text-anchor: middle;
+} */
