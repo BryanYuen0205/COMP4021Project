@@ -9,8 +9,9 @@ const Socket = (function() {
 
     // This function connects the server and initializes the socket
     const connect = function() {
+        console.log("in the socket connect function");
+        
         socket = io();
-
         // Wait for the socket to connect successfully
         socket.on("connect", () => {          
             console.log("browser successfully connected");

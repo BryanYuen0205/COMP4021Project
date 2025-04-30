@@ -275,7 +275,7 @@ canvas, #game-start, #game-over {
     height: 480px;
 }
 canvas {
-    background: url(background.png);
+    /* background: url(background.png); */
     background-size: cover;
 }
 #game-start, #game-over {

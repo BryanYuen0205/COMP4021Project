@@ -112,7 +112,7 @@ app.post("/signin", (req, res) => {
 });
 
 // Handle the /validate endpoint
-app.get("/validate", (req, res) => {
+app.get("/validate", (req, res) => { 
 
     //
     // B. Getting req.session.user
@@ -136,14 +136,44 @@ app.get("/validate", (req, res) => {
     // res.json({ status: "error", error: "This endpoint is not yet implemented." });
 });
 
+    // Handle the /signout endpoint
+    app.get("/signout", (req, res) => {
+        console.log("At the signout endpoint");
+        
+        //
+        // Deleting req.session.user
+        //
+        delete req.session.user;
+        //
+        // Sending a success response
+        //
+        res.json({status: "success"});
+        // Delete when appropriate
+        // res.json({ status: "error", error: "This endpoint is not yet implemented." });
+    });
+
+
 io.use((socket, next) => {
     chatSession(socket.request, {}, next);
 });
 
 
 io.on("connection", (socket) => {
-    console.log(socket.request.session.user);
-    socket.emit("greeting");
+    if(socket.request.session.user){     
+        const {username, name} = socket.request.session.user;
+        onlineUsers[username] = {name:name};
+        // io.emit("add user", JSON.stringify({username, avatar, name}));
+
+        socket.on("disconnect", () => {
+            delete onlineUsers[socket.request.session.user.username];
+            // io.emit("remove user", JSON.stringify({username, avatar, name}));
+            // console.log(onlineUsers); 
+        }) 
+    
+        socket.emit("greeting");
+    }  
+
+    
 })
 
 // Use a web server to listen at port 8000

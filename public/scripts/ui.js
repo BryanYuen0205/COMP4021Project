@@ -20,9 +20,9 @@ const SignInForm = (function() {
             Authentication.signin(username, password,
                 () => {
                     hide();
-                    UserPanel.update(Authentication.getUser());
-                    UserPanel.show();
-
+                    Menu.show();
+                    // UserPanel.update(Authentication.getUser());
+                    // UserPanel.show();                    
                     Socket.connect();
                 },
                 (error) => { $("#signin-message").text(error); }
@@ -94,11 +94,26 @@ const Menu = (function(){
     
         $("#signout-button").on("click", () => {
             console.log("signout button clicked bro");
+            Authentication.signout(
+                () => {
+                    Socket.disconnect();
+                    $("#menu-overlay").hide();
+                    SignInForm.show();
+                }
+            )
         })
     };
 
+    const show = function(){
+        $("#menu-overlay").show();
+    }
+
+    const hide = function(){
+        $("#menu-overlay").show();
+    }
+
     // return {initialize,hi};
-    return {initialize};
+    return {initialize, show, hide};
 })();
 
 // const UserPanel = (function() {

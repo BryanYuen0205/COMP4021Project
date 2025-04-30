@@ -36,7 +36,7 @@ const Authentication = (function() {
                 onSuccess();
             }
             else if(onError) onError(json.error);})
-        .catch((err) => {console.log("Error!")})
+        .catch((err) => {console.log(err)})
         //
         // F. Processing any error returned by the server
         //
@@ -72,7 +72,7 @@ const Authentication = (function() {
                 onError(json.error);
             }            
         })
-        .catch((error) => console.log("Error!"))
+        .catch((error) => console.log(error))
         //
         // C. Processing any error returned by the server
         //
@@ -97,13 +97,15 @@ const Authentication = (function() {
         .then((response) => response.json())
         .then((json) => {
             if(json.status == "success"){
+                console.log("im here bro");
+                
                 user = null;                
                 onSuccess();
             }
             else if (onError)
                 onError(json.error);
         })
-        .catch((error) => console.log("Error!"))
+        .catch((error) => console.log(error))
         // if (onError) onError("This function is not yet implemented.");
     };
 
