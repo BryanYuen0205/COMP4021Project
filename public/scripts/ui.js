@@ -77,18 +77,21 @@ const SignInForm = (function() {
 const Menu = (function(){
     // Click event for the Single Player button
     const initialize = function(){
-        $("#singleplayer-button").on("click", () => {
-            console.log("sp button clicked bro");
-        })
-
-        $("#multiplayer-button").on("click", () => {
-            console.log("mp button clicked bro");
-        })
-
         $("#instructions-button").on("click", () => {
             console.log("instructions button clicked bro");
         })
 
+        $("#singleplayer-button").on("click", () => {
+            console.log("sp button clicked bro");
+            $("#menu-overlay").hide();
+        })
+    
+        $("#multiplayer-button").on("click", () => {
+            console.log("mp button clicked bro");
+            $("#menu-overlay").hide();
+        })
+    
+    
         $("#signout-button").on("click", () => {
             console.log("signout button clicked bro");
         })

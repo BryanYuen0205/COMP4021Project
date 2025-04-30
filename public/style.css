@@ -261,7 +261,7 @@ button.icon:active {
     align-self: stretch;
 }
 
-/* #game-container {
+#game-container {
     position: relative;
 }
 canvas, #counter, #game-start, #game-over {
@@ -301,4 +301,4 @@ canvas {
     font-size: 120%;
     fill: url(#game-over-fill);
     text-anchor: middle;
-} */
+}
