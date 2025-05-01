@@ -91,3 +91,5 @@ const BoundingBox = function(ctx, top, left, bottom, right) {
         randomPoint: randomPoint
     };
 };
+
+export default BoundingBox;

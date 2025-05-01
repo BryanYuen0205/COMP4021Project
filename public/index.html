@@ -52,7 +52,8 @@
         </text>
     </svg>
   </div>
-  <div id="menu-overlay" class="overlay row">
+  <!-- remove inline style when not needed -->
+  <div id="menu-overlay" class="overlay row" style="display: none;">
     <div class="content shadow col">
       <h2>Main Menu</h2>
       <button id="instructions-button" class="nes-btn is-primary">View Instructions</button>
@@ -61,7 +62,8 @@
       <button id="signout-button" class="nes-btn is-primary">Sign Out</button>
     </div>
   </div>
-  <div id="signin-overlay" class="overlay row">
+  <!-- remove inline style when not needed -->
+  <div id="signin-overlay" class="overlay row" style="display: none;">
     <div class="content shadow row">
         <form id="signin-form" class="col">
             <div class="caption">SIGN IN WITH YOUR ACCOUNT</div>
@@ -98,6 +100,8 @@
   <script src="scripts/ui.js"></script>
   <script src="scripts/registration.js"></script>
   <script src="scripts/authentication.js"></script>
+  <script  type="module" src="/scripts/game.js"></script>
+
   <script>
     $(function() {
       // Initialize the UI
