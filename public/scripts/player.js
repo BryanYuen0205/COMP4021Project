@@ -110,6 +110,7 @@ const Player = function(ctx, x, y, gameArea) {
     return {
         move: move,
         stop: stop,
+        getXY: sprite.getXY,
         speedUp: speedUp,
         slowDown: slowDown,
         getBoundingBox: sprite.getBoundingBox,

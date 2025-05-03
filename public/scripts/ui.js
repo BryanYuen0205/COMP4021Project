@@ -96,6 +96,7 @@ const Menu = (function(){
             console.log("signout button clicked bro");
             Authentication.signout(
                 () => {
+                    console.log("signing out now");
                     Socket.disconnect();
                     $("#menu-overlay").hide();
                     SignInForm.show();

@@ -141,11 +141,6 @@ const Sprite = function(ctx, x, y) {
 
         /* TODO */
         /* Replace the following code to draw the sprite correctly */
-        // ctx.fillStyle = "red";
-        // ctx.globalAlpha = 0.6;
-        // ctx.fillRect(parseInt(x - size.width / 2), parseInt(y - size.height / 2),
-        // size.width, size.height);  
-        // console.log(sequence);
         ctx.imageSmoothingEnabled = false;
         
         ctx.drawImage(sheet, sequence.x + index * sequence.width, sequence.y, sequence.width, sequence.height, 

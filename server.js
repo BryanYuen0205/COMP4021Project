@@ -6,6 +6,8 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { log } = require("console");
 const onlineUsers = {};
+const players = {};
+const currentPlayer = null;
 
 // Create the Express app
 const app = express();
@@ -162,13 +164,30 @@ io.on("connection", (socket) => {
     if(socket.request.session.user){     
         const {username, name} = socket.request.session.user;
         onlineUsers[username] = {name:name};
+        players[username] = {x:500, y:240};
         // io.emit("add user", JSON.stringify({username, avatar, name}));
+        console.log(onlineUsers);
+        
+        // Notify all existing clients about the new player 
+        io.emit("newPlayer", {username: username, x:427, y: 240});
+
+        socket.on("get players", () => {
+            socket.emit("players", onlineUsers);
+        })
 
         socket.on("disconnect", () => {
             delete onlineUsers[socket.request.session.user.username];
             // io.emit("remove user", JSON.stringify({username, avatar, name}));
             // console.log(onlineUsers); 
-        }) 
+        });
+ 
+        socket.on("move", (playerAction) => {
+            io.emit("playerMove", playerAction);
+        });
+
+        socket.on("stop", (playerAction) => {
+            io.emit("playerStop", playerAction);
+        });
     
         socket.emit("greeting");
     }  

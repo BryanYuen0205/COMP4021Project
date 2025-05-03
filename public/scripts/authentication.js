@@ -1,3 +1,5 @@
+import Game from './game.js';
+
 const Authentication = (function() {
     // This stores the current signed-in user
     let user = null;
@@ -21,7 +23,7 @@ const Authentication = (function() {
         //
         const preparedData = JSON.stringify({username:username, password:password});
         //
-        // B. Sending the AJAX request to the server
+        // B. Sending the AJAX request to the server        
         //
         fetch("/signin", {
             method: "POST",
@@ -32,8 +34,9 @@ const Authentication = (function() {
         .then((json) => {
             if(json.status == "success") {
                 user = json.user;
-                console.log(user);
+                console.log("Signing in the user " + user.username);
                 onSuccess();
+                Game.setCurrPlayer(user);
             }
             else if(onError) onError(json.error);})
         .catch((err) => {console.log(err)})
@@ -66,6 +69,7 @@ const Authentication = (function() {
                 console.log("client user validated");
                 user = json.user;
                 onSuccess();
+                Game.setCurrPlayer(user);
             }
             else if(onError){
                 console.log("client no user validated");
@@ -111,3 +115,5 @@ const Authentication = (function() {
 
     return { getUser, signin, validate, signout };
 })();
+
+window.Authentication = Authentication;

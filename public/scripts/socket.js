@@ -1,6 +1,9 @@
+import Game from './game.js';
+
 const Socket = (function() {
     // This stores the current Socket.IO socket
     let socket = null;
+    let players = {};
 
     // This function gets the socket from the module
     const getSocket = function() {
@@ -13,12 +16,34 @@ const Socket = (function() {
         
         socket = io();
         // Wait for the socket to connect successfully
-        socket.on("connect", () => {          
+        socket.on("connect", () => {        
+            // Trying to get all existing players  
+            socket.emit("get players");
             console.log("browser successfully connected");
         });
 
         socket.on("greeting", () => {
             console.log("Received message from server ok!");
+        })
+
+        // Add existing remote players
+        socket.on("players", (onlineUsers) => {
+            Game.addExistingRemotePlayers(onlineUsers);
+        })
+
+        // Add new player
+        socket.on("newPlayer", (player) => {
+            Game.addNewRemotePlayer(player);
+        });
+
+        // Move other remote players 
+        socket.on("playerMove", (playerAction) => {
+            Game.moveRemotePlayer(playerAction);
+        })
+
+        // Stop other remote players 
+        socket.on("playerStop", (playerAction) => {
+            Game.stopRemotePlayer(playerAction);
         })
     };
 
@@ -35,5 +60,9 @@ const Socket = (function() {
         }
     };
 
+
     return { getSocket, connect, disconnect, postMessage };
 })();
+
+// This makes Socket accessible globally even when using ES modules.
+window.Socket = Socket;
