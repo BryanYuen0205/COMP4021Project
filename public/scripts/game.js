@@ -47,19 +47,25 @@ const Game = (function (){
 
     // Adds new remote players
     const addNewRemotePlayer = function (player){        
+        console.log("Adding new remote player");
+        
         if(currPlayer && player.username != currPlayerUsername){
             remotePlayers[player.username] = Player(context, player.x, player.y, gameArea);
         }
+        console.log("The total length is " + Object.keys(remotePlayers).length);
     }
 
     // Adds existing remote players
     const addExistingRemotePlayers = function (players) {
         // Only add players that are not the current player
+        console.log("Adding existing remote player");
+
         for (const player in players){
             if(currPlayerUsername != player){
                 remotePlayers[player] = Player(context, 427, 240, gameArea);
             }
         }
+        console.log("The total length is " + Object.keys(remotePlayers).length);
     }
 
     // This function sets the current player 
@@ -97,6 +103,74 @@ const Game = (function (){
         if(socket){
             socket.emit("stop", {player:player, moveNum:moveNum});
         }
+    }
+
+    // Function to start the game
+    const startGame = function (){
+        /* Hide the start screen */
+        $("#game-start").hide();
+        // sounds.background.play();
+        gem.randomize(gameArea);
+        // console.log(gameArea.getPoints());
+        
+
+        /* Handle the keydown of arrow keys and spacebar */
+        $(document).on("keydown", function(event) {
+            /* TODO */
+            /* Handle the key down */
+            let moveNum;
+            console.log(currPlayerUsername + " receiving key down ");
+            if(event.keyCode == 37){
+                currPlayer.move(1);
+                moveNum = 1;
+            }
+            else if(event.keyCode == 38){
+                currPlayer.move(2);
+                moveNum = 2;
+            }
+            else if(event.keyCode == 39){
+                currPlayer.move(3);
+                moveNum = 3;
+            }
+            else if(event.keyCode == 40){
+                currPlayer.move(4);
+                moveNum = 4;
+            }
+            else if(event.keyCode == 32)
+                currPlayer.speedUp();
+        
+            emitMovingPosition(currPlayerUsername, moveNum);
+        });
+
+        /* Handle the keyup of arrow keys and spacebar */
+        $(document).on("keyup", function(event) {
+            /* TODO */
+            /* Handle the key up */
+            let moveNum;
+            console.log(currPlayerUsername + " receiving key down ");
+            if(event.keyCode == 37){
+                currPlayer.stop(1);
+                moveNum = 1;
+            }
+            else if(event.keyCode == 38){
+                currPlayer.stop(2);
+                moveNum = 2;
+            }
+            else if(event.keyCode == 39){
+                currPlayer.stop(3);
+                moveNum = 3;
+            }
+            else if(event.keyCode == 40){
+                currPlayer.stop(4);
+                moveNum = 4;
+            }
+            else if(event.keyCode == 32)
+                currPlayer.slowDown();
+            emitStoppingPosition(currPlayerUsername, moveNum);
+        });
+
+        /* Start the game */
+        requestAnimationFrame(doFrame);
     }
 
 
@@ -168,70 +242,7 @@ const Game = (function (){
 
     /* Handle the start of the game */
     $("#game-start").on("click", function() {
-        /* Hide the start screen */
-        $("#game-start").hide();
-        // sounds.background.play();
-        gem.randomize(gameArea);
-        // console.log(gameArea.getPoints());
-        
-
-        /* Handle the keydown of arrow keys and spacebar */
-        $(document).on("keydown", function(event) {
-            /* TODO */
-            /* Handle the key down */
-            let moveNum;
-            console.log(currPlayerUsername + " receiving key down ");
-            if(event.keyCode == 37){
-                currPlayer.move(1);
-                moveNum = 1;
-            }
-            else if(event.keyCode == 38){
-                currPlayer.move(2);
-                moveNum = 2;
-            }
-            else if(event.keyCode == 39){
-                currPlayer.move(3);
-                moveNum = 3;
-            }
-            else if(event.keyCode == 40){
-                currPlayer.move(4);
-                moveNum = 4;
-            }
-            else if(event.keyCode == 32)
-                currPlayer.speedUp();
-        
-            emitMovingPosition(currPlayerUsername, moveNum);
-        });
-
-        /* Handle the keyup of arrow keys and spacebar */
-        $(document).on("keyup", function(event) {
-            /* TODO */
-            /* Handle the key up */
-            let moveNum;
-            console.log(currPlayerUsername + " receiving key down ");
-            if(event.keyCode == 37){
-                currPlayer.stop(1);
-                moveNum = 1;
-            }
-            else if(event.keyCode == 38){
-                currPlayer.stop(2);
-                moveNum = 2;
-            }
-            else if(event.keyCode == 39){
-                currPlayer.stop(3);
-                moveNum = 3;
-            }
-            else if(event.keyCode == 40){
-                currPlayer.stop(4);
-                moveNum = 4;
-            }
-            else if(event.keyCode == 32)
-                currPlayer.slowDown();
-            emitStoppingPosition(currPlayerUsername, moveNum);
-        });
-
-        /* Start the game */
-        requestAnimationFrame(doFrame);
+        startGame();
     });
 
     return {
@@ -240,6 +251,7 @@ const Game = (function (){
         moveRemotePlayer,
         setCurrPlayer,
         stopRemotePlayer,
+        startGame,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };

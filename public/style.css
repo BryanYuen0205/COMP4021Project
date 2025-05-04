@@ -264,12 +264,12 @@ button.icon:active {
 #game-container {
     position: relative;
 }
-canvas, #counter, #game-start, #game-over {
+canvas, #counter, #game-start, #game-over, #waiting-overlay {
     position: absolute;
     top: 0px;
     left: 0px;
 }
-canvas, #game-start, #game-over {
+canvas, #game-start, #game-over, #waiting-overlay {
     border: 1px solid gray;
     width: 854px;
     height: 480px;
@@ -278,7 +278,7 @@ canvas {
     background: url(./images/background.png);
     background-size: cover;
 }
-#game-start, #game-over {
+#game-start, #game-over, #waiting-overlay, #game-wait{
     background: rgba(1, 1, 1, 0.8);
 }
 #counter text {
@@ -288,6 +288,16 @@ canvas {
     stroke-width: 1px;
 }
 #game-start text {
+    font-size: 150%;
+    fill: white;
+    text-anchor: middle;
+}
+#waiting-overlay text {
+    font-size: 150%;
+    fill: white;
+    text-anchor: middle;
+}
+#game-wait text {
     font-size: 150%;
     fill: white;
     text-anchor: middle;

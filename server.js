@@ -7,6 +7,7 @@ const { Server } = require("socket.io");
 const { log } = require("console");
 const onlineUsers = {};
 const players = {};
+const waitingPlayers = [];
 const currentPlayer = null;
 
 // Create the Express app
@@ -169,6 +170,7 @@ io.on("connection", (socket) => {
         console.log(onlineUsers);
         
         // Notify all existing clients about the new player 
+        // REMOVE if not working 
         io.emit("newPlayer", {username: username, x:427, y: 240});
 
         socket.on("get players", () => {
@@ -188,11 +190,20 @@ io.on("connection", (socket) => {
         socket.on("stop", (playerAction) => {
             io.emit("playerStop", playerAction);
         });
+
+        socket.on("joinMultiplayer", () => {
+            if (!waitingPlayers.includes(socket.id)){
+                waitingPlayers.push(socket.id);
+                socket.emit("prepareMultiplayer")
+            } 
+            if (waitingPlayers.length >= 2) {
+                waitingPlayers.forEach(id => io.to(id).emit("startGame", waitingPlayers.length));
+                waitingPlayers.length = 0; // reset room
+            }
+        })
     
         socket.emit("greeting");
     }  
-
-    
 })
 
 // Use a web server to listen at port 8000

@@ -89,6 +89,12 @@ const Menu = (function(){
         $("#multiplayer-button").on("click", () => {
             console.log("mp button clicked bro");
             $("#menu-overlay").hide();
+            $("#game-start").hide();
+            $("#waiting-overlay").show();
+            const socket = window.Socket.getSocket();
+            if(socket){
+                socket.emit("joinMultiplayer");
+            }
         })
     
     

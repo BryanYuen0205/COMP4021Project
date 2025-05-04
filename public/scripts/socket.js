@@ -18,12 +18,17 @@ const Socket = (function() {
         // Wait for the socket to connect successfully
         socket.on("connect", () => {        
             // Trying to get all existing players  
-            socket.emit("get players");
+            // UNCOMMMENT IF NOT WORKING
+            // socket.emit("get players");
             console.log("browser successfully connected");
         });
 
         socket.on("greeting", () => {
             console.log("Received message from server ok!");
+        })
+
+        socket.on("prepareMultiplayer", () => {
+            socket.emit("get players");
         })
 
         // Add existing remote players
@@ -45,6 +50,17 @@ const Socket = (function() {
         socket.on("playerStop", (playerAction) => {
             Game.stopRemotePlayer(playerAction);
         })
+
+        socket.on("startGame", (waitingPlayers) => {
+            console.log(waitingPlayers);
+            $("#player-count").text(waitingPlayers);
+            if(waitingPlayers == 2){
+                setTimeout(() => {
+                    $("#waiting-overlay").hide();
+                    Game.startGame();
+                }, 2000)
+            }
+        });
     };
 
     // This function disconnects the socket from the server
