@@ -9,6 +9,7 @@ const onlineUsers = {};
 const players = {};
 const waitingPlayers = [];
 const currentPlayer = null;
+const area = {top: 165, left:60, bottom: 420, right: 800};
 
 // Create the Express app
 const app = express();
@@ -35,6 +36,19 @@ app.use(chatSession);
 // This helper function checks whether the text only contains word characters
 function containWordCharsOnly(text) {
     return /^\w+$/.test(text);
+}
+
+function randomGemColor(){
+    const colors = ["green", "red", "yellow", "purple"];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+// Returns a random position within the specified area
+function randomGemPosition(area) {
+    // area: { minX, maxX, minY, maxY }
+    const x = area.left + (Math.random() * (area.right - area.left));
+    const y = area.top + (Math.random() * (area.bottom - area.top));
+    return {x, y};
 }
 
 // Handle the /register endpoint
@@ -191,13 +205,43 @@ io.on("connection", (socket) => {
             io.emit("playerStop", playerAction);
         });
 
+        socket.on("getGemAttr", () => {
+            const {x,y} = randomGemPosition(area);
+            const gemColor = randomGemColor();
+            io.emit("setGemAttr", {
+                gemColor: gemColor,
+                gemPosition : {x,y}
+            });
+        })
+
+        socket.on("logCollectedGems", ({player, collectedGems}) => {
+            console.log("logging collected gems");
+            console.log(player);
+            console.log(collectedGems);        
+            let score = JSON.parse(fs.readFileSync("data/leaderboard.json"));
+            score[player] = collectedGems;
+            fs.writeFileSync("data/leaderboard.json", JSON.stringify(score, null, " "));
+        })
+
         socket.on("joinMultiplayer", () => {
             if (!waitingPlayers.includes(socket.id)){
                 waitingPlayers.push(socket.id);
                 socket.emit("prepareMultiplayer")
             } 
             if (waitingPlayers.length >= 2) {
-                waitingPlayers.forEach(id => io.to(id).emit("startGame", waitingPlayers.length));
+                // socket.emit("gemUpdate");
+                const {x,y} = randomGemPosition(area);
+                const gemColor = randomGemColor();
+                let numWaitingPlayers = waitingPlayers.length;
+
+                console.log("The ran gem col : " + randomGemColor());
+                console.log("The ran gem pos : " + x + " " + y);
+
+                waitingPlayers.forEach(id => io.to(id).emit("startGame", {
+                    numWaitingPlayers: numWaitingPlayers, 
+                    gemColor: gemColor,
+                    gemPosition : {x,y}
+                }));
                 waitingPlayers.length = 0; // reset room
             }
         })

@@ -51,11 +51,22 @@ const Socket = (function() {
             Game.stopRemotePlayer(playerAction);
         })
 
-        socket.on("startGame", (waitingPlayers) => {
-            console.log(waitingPlayers);
-            $("#player-count").text(waitingPlayers);
-            if(waitingPlayers == 2){
+        // Update the gem position
+        socket.on("setGemAttr", (newGemAttr) => {
+            console.log("Setting up new gem attributes");
+            const gemColor = newGemAttr.gemColor;
+            const gemPos = newGemAttr.gemPosition;
+            Game.setGemAttr(gemColor, gemPos);
+        })
+
+        // Start the game
+        socket.on("startGame", (gameAttr) => {
+            const gemColor = gameAttr.gemColor;
+            const gemPos = gameAttr.gemPosition;
+            $("#player-count").text(gameAttr.numWaitingPlayers);
+            if(gameAttr.numWaitingPlayers == 2){
                 setTimeout(() => {
+                    Game.setGemAttr(gemColor, gemPos);
                     $("#waiting-overlay").hide();
                     Game.startGame();
                 }, 2000)

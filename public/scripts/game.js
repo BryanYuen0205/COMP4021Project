@@ -17,14 +17,14 @@ const Game = (function (){
     //     gameover: new Audio("./music/gameover.mp3")
     // };
 
-    const totalGameTime = 100;   // Total game time in seconds
+    const totalGameTime = 10;   // Total game time in seconds
     const gemMaxAge = 3000;     // The maximum age of the gems in milliseconds
     let currPlayer = null;
     let currPlayerUsername = null;
     let gameStartTime = 0;      // The timestamp when the game starts
     let collectedGems = 0;      // The number of gems collected in the game
     let remotePlayers = {};
-
+    let gemColor, gemPosition;
 
     /* Create the game area */
     const gameArea = BoundingBox(context, 165, 60, 420, 800);
@@ -43,8 +43,23 @@ const Game = (function (){
 
     /* Create the sprites in the game */
     // const player = Player(context, 427, 240, gameArea); // The player
-    const gem = Gem(context, 427, 350, "green");        // The gem
+    let gem = Gem(context, 427, 350, "green");        // The gem
 
+    const setGemAttr = function (color, pos){
+        console.log("Setting up gem attributes with " + color + " and " + pos.x + " " + pos.y);
+        gemColor = color;
+        gemPosition = pos;
+        gem.randomize(gemColor, gemPosition)
+    }
+
+    const getGemAttr = function (){
+        console.log("Getting gem attributes from server");
+        const socket = window.Socket.getSocket();
+        if(socket){
+            socket.emit("getGemAttr");
+        }
+    }
+    
     // Adds new remote players
     const addNewRemotePlayer = function (player){        
         console.log("Adding new remote player");
@@ -105,12 +120,23 @@ const Game = (function (){
         }
     }
 
+    // Emits number of gems collected by current player
+    const emitCollectedGems = function (){
+        console.log("Emitting collected Gems");
+        
+        const socket = window.Socket.getSocket();
+        if(socket){
+            socket.emit("logCollectedGems", {player:currPlayerUsername, collectedGems:collectedGems});
+        }
+    }
+
     // Function to start the game
     const startGame = function (){
         /* Hide the start screen */
         $("#game-start").hide();
         // sounds.background.play();
-        gem.randomize(gameArea);
+        // gem.randomize(gameArea);
+        gem.randomize(gemColor, gemPosition);
         // console.log(gameArea.getPoints());
         
 
@@ -189,6 +215,7 @@ const Game = (function (){
         if(timeRemaining == 0){
             $("#game-over").show();
             $("#final-gems").html(collectedGems);
+            emitCollectedGems();
             // sounds.background.pause();
             // sounds.collect.pause();
             // sounds.gameover.play();
@@ -206,16 +233,21 @@ const Game = (function (){
         /* TODO */
         /* Randomize the gem and collect the gem here */
         if(gem.getAge(now) >= gemMaxAge){
-            gem.randomize(gameArea);
+            // Get new gem color and position
+            // gem.randomize(gameArea);
+            getGemAttr();
+            // gem.randomize(gemColor, gemPosition);
         }
+
         let playerBoundingBox = currPlayer.getBoundingBox();
         let gemPos = gem.getXY();                        
         
         if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y)){
             collectedGems++;
+            getGemAttr();
+            
             // console.log(collectedGems);
             // sounds.collect.play();
-            gem.randomize(gameArea);
         }
 
         /* Clear the screen */
@@ -252,6 +284,7 @@ const Game = (function (){
         setCurrPlayer,
         stopRemotePlayer,
         startGame,
+        setGemAttr,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };
