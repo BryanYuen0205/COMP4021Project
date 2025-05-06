@@ -44,7 +44,7 @@ function randomGemColor(){
 }
 
 // Returns a random position within the specified area
-function randomGemPosition(area) {
+function randomPosition(area) {
     // area: { minX, maxX, minY, maxY }
     const x = area.left + (Math.random() * (area.right - area.left));
     const y = area.top + (Math.random() * (area.bottom - area.top));
@@ -205,13 +205,28 @@ io.on("connection", (socket) => {
             io.emit("playerStop", playerAction);
         });
 
+        socket.on("playerSpeedUp", (player) => {
+            console.log(player + " is FUCKING SPEEDING");
+            io.emit("increaseSpeed", player);
+        })
+
+        socket.on("playerSlowDown", (player) => {
+            console.log(player + " is FUCKING SLOW");
+            io.emit("decreaseSpeed", player);
+        })
+
         socket.on("getGemAttr", () => {
-            const {x,y} = randomGemPosition(area);
+            const {x,y} = randomPosition(area);
             const gemColor = randomGemColor();
             io.emit("setGemAttr", {
                 gemColor: gemColor,
                 gemPosition : {x,y}
             });
+        })
+
+        socket.on("getBootsPos", () => {
+            const {x,y} = randomPosition(area);
+            io.emit("setBootsPos", {x,y})
         })
 
         socket.on("logCollectedGems", ({player, collectedGems}) => {
@@ -230,7 +245,8 @@ io.on("connection", (socket) => {
             } 
             if (waitingPlayers.length >= 2) {
                 // socket.emit("gemUpdate");
-                const {x,y} = randomGemPosition(area);
+                const {x,y} = randomPosition(area);
+                const bootsPos = randomPosition(area);
                 const gemColor = randomGemColor();
                 let numWaitingPlayers = waitingPlayers.length;
 
@@ -240,7 +256,8 @@ io.on("connection", (socket) => {
                 waitingPlayers.forEach(id => io.to(id).emit("startGame", {
                     numWaitingPlayers: numWaitingPlayers, 
                     gemColor: gemColor,
-                    gemPosition : {x,y}
+                    gemPosition : {x,y},
+                    bootsPos : bootsPos,
                 }));
                 waitingPlayers.length = 0; // reset room
             }

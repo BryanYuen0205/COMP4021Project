@@ -42,18 +42,6 @@ const Gem = function(ctx, x, y, color) {
         return now - birthTime;
     };
 
-    // This function randomizes the gem colour and position.
-    // - `area` - The area that the gem should be located in.
-    // const randomize = function(area) {
-    //     /* Randomize the color */
-    //     const colors = ["green", "red", "yellow", "purple"];
-    //     setColor(colors[Math.floor(Math.random() * 4)]);
-
-    //     /* Randomize the position */
-    //     const {x, y} = area.randomPoint();
-    //     sprite.setXY(x, y);
-    // };
-
     const randomize = function(col, pos) {
         // console.log(gemAttr.gemColor + " " + gemAttr.gemPosition);
         

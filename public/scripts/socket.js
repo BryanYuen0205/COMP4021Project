@@ -51,6 +51,15 @@ const Socket = (function() {
             Game.stopRemotePlayer(playerAction);
         })
 
+        // Increase the speed of the player
+        socket.on("increaseSpeed", (player) => {
+            Game.increaseSpeed(player);
+        })
+
+        socket.on("decreaseSpeed", (player) => {
+            Game.decreaseSpeed(player);
+        })
+
         // Update the gem position
         socket.on("setGemAttr", (newGemAttr) => {
             console.log("Setting up new gem attributes");
@@ -59,14 +68,21 @@ const Socket = (function() {
             Game.setGemAttr(gemColor, gemPos);
         })
 
+        // Update the boots position
+        socket.on("setBootsPos", (bootsPos) => {
+            Game.setBoots(bootsPos);
+        })
+
         // Start the game
         socket.on("startGame", (gameAttr) => {
             const gemColor = gameAttr.gemColor;
             const gemPos = gameAttr.gemPosition;
+            const bootsPos = gameAttr.bootsPos;
             $("#player-count").text(gameAttr.numWaitingPlayers);
             if(gameAttr.numWaitingPlayers == 2){
                 setTimeout(() => {
                     Game.setGemAttr(gemColor, gemPos);
+                    Game.setBoots(bootsPos);
                     $("#waiting-overlay").hide();
                     Game.startGame();
                 }, 2000)

@@ -3,6 +3,7 @@ import Gem from './gem.js';
 import BoundingBox from './bounding_box.js';
 import Fire from './fire.js';
 import Bomb from './bomb.js';
+import Boots from './boots.js';
 
 const Game = (function (){
     
@@ -17,14 +18,15 @@ const Game = (function (){
     //     gameover: new Audio("./music/gameover.mp3")
     // };
 
-    const totalGameTime = 10;   // Total game time in seconds
+    const totalGameTime = 30;   // Total game time in seconds
     const gemMaxAge = 3000;     // The maximum age of the gems in milliseconds
+    const bootsMaxAge = 2000;   // The maximum age of the boots in milliseconds
     let currPlayer = null;
     let currPlayerUsername = null;
     let gameStartTime = 0;      // The timestamp when the game starts
     let collectedGems = 0;      // The number of gems collected in the game
     let remotePlayers = {};
-    let gemColor, gemPosition;
+    let gemColor, gemPosition, bootsPosition;
 
     /* Create the game area */
     const gameArea = BoundingBox(context, 165, 60, 420, 800);
@@ -42,45 +44,64 @@ const Game = (function (){
     ]
 
     /* Create the sprites in the game */
-    // const player = Player(context, 427, 240, gameArea); // The player
-    let gem = Gem(context, 427, 350, "green");        // The gem
-
+    // The Gem
+    let gem = Gem(context, 427, 350, "green");        
+    
+    // The Boots powerup
+    let boots = Boots(context, 427, 350);
+    
     const setGemAttr = function (color, pos){
-        console.log("Setting up gem attributes with " + color + " and " + pos.x + " " + pos.y);
+        // console.log("Setting up gem attributes with " + color + " and " + pos.x + " " + pos.y);
         gemColor = color;
         gemPosition = pos;
         gem.randomize(gemColor, gemPosition)
     }
 
     const getGemAttr = function (){
-        console.log("Getting gem attributes from server");
+        // console.log("Getting gem attributes from server");
         const socket = window.Socket.getSocket();
         if(socket){
             socket.emit("getGemAttr");
         }
     }
-    
+
+    // Function to set up the position of the boots powerup
+    const setBoots = function (pos){
+        console.log("Setting the position of the boots");
+        bootsPosition = pos;
+        boots.randomize(pos);
+    }
+
+    // Function to get the position of the boots powerup
+    const getBootsPos = function (){
+        // console.log("Getting gem attributes from server");
+        const socket = window.Socket.getSocket();
+        if(socket){
+            socket.emit("getBootsPos");
+        }
+    }
+
     // Adds new remote players
     const addNewRemotePlayer = function (player){        
-        console.log("Adding new remote player");
+        // console.log("Adding new remote player");
         
         if(currPlayer && player.username != currPlayerUsername){
             remotePlayers[player.username] = Player(context, player.x, player.y, gameArea);
         }
-        console.log("The total length is " + Object.keys(remotePlayers).length);
+        // console.log("The total length is " + Object.keys(remotePlayers).length);
     }
 
     // Adds existing remote players
     const addExistingRemotePlayers = function (players) {
         // Only add players that are not the current player
-        console.log("Adding existing remote player");
+        // console.log("Adding existing remote player");
 
         for (const player in players){
             if(currPlayerUsername != player){
                 remotePlayers[player] = Player(context, 427, 240, gameArea);
             }
         }
-        console.log("The total length is " + Object.keys(remotePlayers).length);
+        // console.log("The total length is " + Object.keys(remotePlayers).length);
     }
 
     // This function sets the current player 
@@ -95,12 +116,18 @@ const Game = (function (){
         if(remotePlayers[playerAction.player]){
             remotePlayers[playerAction.player].move(playerAction.moveNum);
         }
+        else{
+            currPlayer.move(playerAction.moveNum);
+        }
     }
     
     // This function stops other remote players 
     const stopRemotePlayer = function (playerAction){
         if(remotePlayers[playerAction.player]){
             remotePlayers[playerAction.player].stop(playerAction.moveNum);
+        }
+        else{
+            currPlayer.stop(playerAction.moveNum);
         }
     }
 
@@ -122,13 +149,52 @@ const Game = (function (){
 
     // Emits number of gems collected by current player
     const emitCollectedGems = function (){
-        console.log("Emitting collected Gems");
+        // console.log("Emitting collected Gems");
         
         const socket = window.Socket.getSocket();
         if(socket){
             socket.emit("logCollectedGems", {player:currPlayerUsername, collectedGems:collectedGems});
         }
     }
+
+    // Increases the player speed 
+    const increaseSpeed = function (player){
+        console.log(player + "'s speed increased");
+        if(remotePlayers[player]){
+            remotePlayers[player].speedUp();
+        }
+        else{
+            currPlayer.speedUp();
+        }
+    }
+
+    // Emits player speed up 
+    const emitSpeedUp = function (){
+        const socket = window.Socket.getSocket();
+        if(socket){
+            socket.emit("playerSpeedUp", currPlayerUsername);
+        }
+    }
+
+    // Increases the player speed 
+    const decreaseSpeed = function (player){
+        console.log(player + "'s speed decreased");
+        if(remotePlayers[player]){
+            remotePlayers[player].slowDown();
+        }
+        else{
+            currPlayer.slowDown();
+        }
+    }
+
+    // Emits player speed up 
+    const emitSlowDown = function (){
+        const socket = window.Socket.getSocket();
+        if(socket){
+            socket.emit("playerSlowDown", currPlayerUsername);
+        }
+    }
+    
 
     // Function to start the game
     const startGame = function (){
@@ -137,6 +203,7 @@ const Game = (function (){
         // sounds.background.play();
         // gem.randomize(gameArea);
         gem.randomize(gemColor, gemPosition);
+        boots.randomize(bootsPosition);
         // console.log(gameArea.getPoints());
         
 
@@ -147,23 +214,25 @@ const Game = (function (){
             let moveNum;
             console.log(currPlayerUsername + " receiving key down ");
             if(event.keyCode == 37){
-                currPlayer.move(1);
+                // currPlayer.move(1);
                 moveNum = 1;
             }
             else if(event.keyCode == 38){
-                currPlayer.move(2);
+                // currPlayer.move(2);
                 moveNum = 2;
             }
             else if(event.keyCode == 39){
-                currPlayer.move(3);
+                // currPlayer.move(3);
                 moveNum = 3;
             }
             else if(event.keyCode == 40){
-                currPlayer.move(4);
+                // currPlayer.move(4);
                 moveNum = 4;
             }
-            else if(event.keyCode == 32)
-                currPlayer.speedUp();
+            else if(event.keyCode == 32){
+                // currPlayer.speedUp();
+                emitSpeedUp();
+            }
         
             emitMovingPosition(currPlayerUsername, moveNum);
         });
@@ -175,23 +244,25 @@ const Game = (function (){
             let moveNum;
             console.log(currPlayerUsername + " receiving key down ");
             if(event.keyCode == 37){
-                currPlayer.stop(1);
+                // currPlayer.stop(1);
                 moveNum = 1;
             }
             else if(event.keyCode == 38){
-                currPlayer.stop(2);
+                // currPlayer.stop(2);
                 moveNum = 2;
             }
             else if(event.keyCode == 39){
-                currPlayer.stop(3);
+                // currPlayer.stop(3);
                 moveNum = 3;
             }
             else if(event.keyCode == 40){
-                currPlayer.stop(4);
+                // currPlayer.stop(4);
                 moveNum = 4;
             }
-            else if(event.keyCode == 32)
-                currPlayer.slowDown();
+            else if(event.keyCode == 32){
+                emitSlowDown();
+                // currPlayer.slowDown();
+            }
             emitStoppingPosition(currPlayerUsername, moveNum);
         });
 
@@ -224,7 +295,9 @@ const Game = (function (){
 
         /* Update the sprites */
         gem.update(now);
+        boots.update(now);
         currPlayer.update(now);
+
         for(let i = 0; i < fires.length; i++)
             fires[i].update(now);
         for(let i = 0; i < bombs.length; i++)
@@ -239,8 +312,13 @@ const Game = (function (){
             // gem.randomize(gemColor, gemPosition);
         }
 
+        if(boots.getAge(now) >= bootsMaxAge){       
+            getBootsPos();
+        }
+
         let playerBoundingBox = currPlayer.getBoundingBox();
-        let gemPos = gem.getXY();                        
+        let gemPos = gem.getXY();       
+        let boostPos = boots.getXY();           
         
         if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y)){
             collectedGems++;
@@ -250,12 +328,20 @@ const Game = (function (){
             // sounds.collect.play();
         }
 
+        if(playerBoundingBox.isPointInBox(boostPos.x, boostPos.y)){
+            console.log("Collected boots powerup");
+            getBootsPos();
+            // sounds.collect.play();
+            emitSpeedUp()
+            setTimeout(emitSlowDown, 500);
+        }
+
         /* Clear the screen */
         context.clearRect(0, 0, cv.width, cv.height);
 
         /* Draw the sprites */
         gem.draw();
-        // player.draw();
+        boots.draw();
         currPlayer.draw();
 
         for (let username in remotePlayers){
@@ -285,6 +371,9 @@ const Game = (function (){
         stopRemotePlayer,
         startGame,
         setGemAttr,
+        setBoots,
+        increaseSpeed,
+        decreaseSpeed,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };
