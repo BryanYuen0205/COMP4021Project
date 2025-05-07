@@ -3,7 +3,6 @@ import Game from './game.js';
 const Socket = (function() {
     // This stores the current Socket.IO socket
     let socket = null;
-    let players = {};
 
     // This function gets the socket from the module
     const getSocket = function() {
@@ -62,7 +61,7 @@ const Socket = (function() {
 
         // Update the gem position
         socket.on("setGemAttr", (newGemAttr) => {
-            console.log("Setting up new gem attributes");
+            // console.log("Setting up new gem attributes");
             const gemColor = newGemAttr.gemColor;
             const gemPos = newGemAttr.gemPosition;
             Game.setGemAttr(gemColor, gemPos);
@@ -73,14 +72,23 @@ const Socket = (function() {
             Game.setBoots(bootsPos);
         })
 
+        // Update the number of players waiting
+        socket.on("waitingRoomUpdate", ({ numWaitingPlayers }) => {
+            $("#player-count").text(numWaitingPlayers);
+        });
+
         // Start the game
         socket.on("startGame", (gameAttr) => {
+            console.log("Starting the game bro");
+            
             const gemColor = gameAttr.gemColor;
             const gemPos = gameAttr.gemPosition;
             const bootsPos = gameAttr.bootsPos;
-            $("#player-count").text(gameAttr.numWaitingPlayers);
+            const seshUser = gameAttr.seshUser;
+            // $("#player-count").text(gameAttr.numWaitingPlayers);
             if(gameAttr.numWaitingPlayers == 2){
                 setTimeout(() => {
+                    // Game.setCurrPlayer(seshUser)
                     Game.setGemAttr(gemColor, gemPos);
                     Game.setBoots(bootsPos);
                     $("#waiting-overlay").hide();

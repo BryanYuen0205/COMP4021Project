@@ -7,7 +7,8 @@ const { Server } = require("socket.io");
 const { log } = require("console");
 const onlineUsers = {};
 const players = {};
-const waitingPlayers = [];
+// const waitingPlayers = [];
+let waitingPlayers = {};
 const currentPlayer = null;
 const area = {top: 165, left:60, bottom: 420, right: 800};
 
@@ -206,12 +207,12 @@ io.on("connection", (socket) => {
         });
 
         socket.on("playerSpeedUp", (player) => {
-            console.log(player + " is FUCKING SPEEDING");
+            // console.log(player + " is FUCKING SPEEDING");
             io.emit("increaseSpeed", player);
         })
 
         socket.on("playerSlowDown", (player) => {
-            console.log(player + " is FUCKING SLOW");
+            // console.log(player + " is FUCKING SLOW");
             io.emit("decreaseSpeed", player);
         })
 
@@ -230,36 +231,50 @@ io.on("connection", (socket) => {
         })
 
         socket.on("logCollectedGems", ({player, collectedGems}) => {
-            console.log("logging collected gems");
-            console.log(player);
-            console.log(collectedGems);        
+            // console.log("logging collected gems");
+            // console.log(player);
+            // console.log(collectedGems);        
             let score = JSON.parse(fs.readFileSync("data/leaderboard.json"));
             score[player] = collectedGems;
             fs.writeFileSync("data/leaderboard.json", JSON.stringify(score, null, " "));
         })
 
         socket.on("joinMultiplayer", () => {
-            if (!waitingPlayers.includes(socket.id)){
-                waitingPlayers.push(socket.id);
-                socket.emit("prepareMultiplayer")
-            } 
-            if (waitingPlayers.length >= 2) {
-                // socket.emit("gemUpdate");
+            console.log(username + " is joining mp");
+            
+            if(!waitingPlayers[username]){
+                // console.log("Adding this guy to waiting list " + username);
+                
+                waitingPlayers[username] = socket.id;
+                
+                socket.emit("prepareMultiplayer");
+            }
+            // Broadcast the updated waiting player count to all waiting players
+            let numWaitingPlayers = Object.keys(waitingPlayers).length;
+            for (const socketId of Object.values(waitingPlayers)) {
+                io.to(socketId).emit("waitingRoomUpdate", { numWaitingPlayers });
+            }
+            if (Object.keys(waitingPlayers).length >= 2) {
+                // io.emit("newPlayer", {username: username, x:427, y: 240});
+                // // socket.emit("gemUpdate");
                 const {x,y} = randomPosition(area);
                 const bootsPos = randomPosition(area);
                 const gemColor = randomGemColor();
-                let numWaitingPlayers = waitingPlayers.length;
 
-                console.log("The ran gem col : " + randomGemColor());
-                console.log("The ran gem pos : " + x + " " + y);
+                for (const [name, socketId] of Object.entries(waitingPlayers)){
+                    console.log(name, socketId);
 
-                waitingPlayers.forEach(id => io.to(id).emit("startGame", {
-                    numWaitingPlayers: numWaitingPlayers, 
-                    gemColor: gemColor,
-                    gemPosition : {x,y},
-                    bootsPos : bootsPos,
-                }));
-                waitingPlayers.length = 0; // reset room
+                    // console.log("The ran gem col : " + randomGemColor());
+                    // console.log("The ran gem pos : " + x + " " + y);
+                    io.to(socketId).emit("startGame", {
+                        numWaitingPlayers: numWaitingPlayers, 
+                        gemColor: gemColor,
+                        gemPosition : {x,y},
+                        bootsPos : bootsPos,
+                        seshUser: socket.request.session.user
+                    })
+                }
+                waitingPlayers = {};
             }
         })
     
@@ -268,6 +283,6 @@ io.on("connection", (socket) => {
 })
 
 // Use a web server to listen at port 8000
-httpServer.listen(8000, () => {
+httpServer.listen(8000,  () => {
     console.log("The chat server has started...");
 });
