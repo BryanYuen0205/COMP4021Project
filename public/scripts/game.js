@@ -4,6 +4,7 @@ import BoundingBox from './bounding_box.js';
 import Fire from './fire.js';
 import Bomb from './bomb.js';
 import Boots from './boots.js';
+import Projectile from './projectile.js';
 
 const Game = (function (){
     
@@ -42,6 +43,9 @@ const Game = (function (){
         Bomb(context, gameAreaPoints.bottomLeft[0], gameAreaPoints.bottomLeft[1]),
         Bomb(context, gameAreaPoints.topRight[0], gameAreaPoints.topRight[1])
     ]
+    
+    // Queue for spawned projectiles. 
+    let projectileQueue = [];
 
     /* Create the sprites in the game */
     // The Gem
@@ -49,6 +53,13 @@ const Game = (function (){
     
     // The Boots powerup
     let boots = Boots(context, 427, 350);
+
+    // add a projectile to the queue.
+    // command: {direction, {x, y}}
+    const addProjectile = function(command) {
+        let {direction, spawn} = command;
+        projectileQueue.push(Projectile(context, spawn.x, spawn.y, gameArea, direction));
+    }
     
     const setGemAttr = function (color, pos){
         // console.log("Setting up gem attributes with " + color + " and " + pos.x + " " + pos.y);
@@ -195,6 +206,34 @@ const Game = (function (){
         }
     }
     
+    // Initiate the randomized projectile spawn loop on the server side.
+    // Server should only run one randomized spawn loop, so make sure it doesn't
+    // run twice for some reason.
+    // This function should run in startGame().
+    const emitStartProjectileLoop = function() {
+        const socket = window.Socket.getSocket();
+        if(socket) {
+            socket.emit("startProjectileLoop");
+        }
+    }
+
+    // End projectile loop on serverside. 
+    // Should run when the game is over for both players.
+    const emitEndProjectileLoop = function() {
+        const socket = window.Socket.getSocket();
+        if (socket) {
+            socket.emit("endProjectileLoop");
+        }
+    }
+
+    // Emit message to server to increase the frequency of projectile spawn.
+    const emitRaiseProjectileDifficulty = function() {
+        const socket = window.Socket.getSocket();
+        if (socket) {
+            socket.emit("raiseProjectileDifficulty");
+        }
+    }
+    
 
     // Function to start the game
     const startGame = function (){
@@ -204,6 +243,7 @@ const Game = (function (){
         // gem.randomize(gameArea);
         gem.randomize(gemColor, gemPosition);
         boots.randomize(bootsPosition);
+        emitStartProjectileLoop();
         // console.log(gameArea.getPoints());
         
 
@@ -279,6 +319,22 @@ const Game = (function (){
         const gameTimeSoFar = now - gameStartTime;
         const timeRemaining = Math.ceil((totalGameTime * 1000 - gameTimeSoFar) / 1000);
         $("#time-remaining").text(timeRemaining);
+
+
+        // Yes... this will cause the game to send 60 ish emits to the server, but it is 
+        // handled on the server via a setTimeout and a difficultyAdjustedRecently variable.
+        // Raise difficulty to easy
+        if(timeRemaining == Math.ceil(totalGameTime * 0.9)) {
+            emitRaiseProjectileDifficulty();
+        }
+        // raise difficulty to medium
+        if(timeRemaining == Math.ceil(totalGameTime * 0.6)) {
+            emitRaiseProjectileDifficulty();
+        }
+        // raise difficulty to hard
+        if(timeRemaining == Math.ceil(totalGameTime * 0.3)) {
+            emitRaiseProjectileDifficulty();
+        }
 
 
         /* TODO */
@@ -374,6 +430,7 @@ const Game = (function (){
         setBoots,
         increaseSpeed,
         decreaseSpeed,
+        addProjectile,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };

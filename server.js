@@ -51,6 +51,54 @@ function randomPosition(area) {
     return {x, y};
 }
 
+/**
+ * Generate random starting positions for projectiles according to specified
+ * direction. 
+ * Returns spawn locations {x, y} according to provided area.
+ */
+function generateProjectileSpawn(area, direction) {
+    // area: { left: minX, right: maxX, top: minY, bottom: maxY}
+    let x, y;
+    switch (direction) {
+        case 0: // left:    spawn minX, randomY
+            x = area.left;
+            y = Math.random() * (area.bottom - area.top);
+            break;
+        case 1: // up:      spawn randomX, minY   
+            x = Math.random() * (area.right - area.left);
+            y = area.top;
+            break;
+        case 2: // right:   spawn maxX, randomY
+            x = area.right;
+            y = Math.random() * (area.bottom - area.top);
+            break;
+        case 3: // down:    spawn randomX, maxY
+            x = Math.random() * (area.right - area.left);
+            y = area.bottom;
+            break;
+        default:
+            console.log("Error: generateProjectileCommand() in server.js:")
+            console.log("\tInvalid direction provided as argument.")
+            x = -1;
+            y = -1;
+            break;
+    }
+    return {x, y}
+}
+
+function broadcastProjectileCommand(area) {
+    const direction = Math.floor(Math.random() * 4); //generate random direction, 0-3
+    const spawn = generateProjectileSpawn(area,direction);
+    const command = {direction, spawn};
+    io.emit("spawnProjectile", command);
+}
+
+function scrambleInterval(interval) {
+    // deviate interval by a value of +- 20% of the original interval.
+    const scrambleBy = (Math.random() * (interval * 0.4)) - (interval * 0.2);
+    return Math.floor(interval + scrambleBy);
+}
+
 // Handle the /register endpoint
 app.post("/register", (req, res) => {
     // Get the JSON data from the body
@@ -174,6 +222,19 @@ io.use((socket, next) => {
     chatSession(socket.request, {}, next);
 });
 
+// Enum to avoid magic numbers when changing projectileInterval.
+const projectileDifficulty = {
+    initial: 300,
+    easy: 250,
+    medium: 200,
+    hard: 100
+}
+// We need to ensure that the projectile loop only runs once, even if there are 
+// two players. Keep track with this variable.
+let projectileLoopOn = false;
+let difficultyAdjustedRecently = false;
+let projectileTimer; 
+let projectileInterval = projectileDifficulty.initial;
 
 io.on("connection", (socket) => {
     if(socket.request.session.user){     
@@ -189,12 +250,58 @@ io.on("connection", (socket) => {
 
         socket.on("get players", () => {
             socket.emit("players", onlineUsers);
-        })
+        });
 
         socket.on("disconnect", () => {
             delete onlineUsers[socket.request.session.user.username];
             // io.emit("remove user", JSON.stringify({username, avatar, name}));
             // console.log(onlineUsers); 
+        });
+
+        socket.on("raiseProjectileDifficulty",() => {
+            if (!difficultyAdjustedRecently) {
+                difficultyAdjustedRecently = true;
+                switch (projectileInterval) {
+                    case projectileDifficulty.initial:
+                        projectileInterval = projectileDifficulty.easy;
+                        break;
+                    case projectileDifficulty.easy:
+                        projectileInterval = projectileDifficulty.medium;
+                        break;
+                    case projectileDifficulty.medium:
+                        projectileInterval = projectileDifficulty.hard;
+                        break;
+                    case projectileDifficulty.hard:
+                        break;
+                }
+                // Do not allow updates within 1.5 seconds. This is to avoid double raising
+                // of difficulty in multiplayer mode.
+                console.log("Difficulty adjusted to: " + Object.keys(projectileDifficulty).find(key => projectileDifficulty[key] === projectileInterval));
+                setInterval(() => {
+                    difficultyAdjustedRecently = false;
+                }, 1500)
+            }
+
+        });
+
+        socket.on("startProjectileLoop", () => {
+            if (!projectileLoopOn) {
+                projectileInterval = projectileDifficulty.initial; // Ensure this is reset at start of game loop.
+                projectileLoopOn = true;
+                // start broadcasting at approximately `projectileInterval` milliseconds.
+                projectileTimer = setInterval(() => {
+                    if (projectileLoopOn) {
+                        broadcastProjectileCommand(area);
+                    } else {
+                        clearInterval(projectileTimer);
+                    }
+                }, scrambleInterval(projectileInterval))
+            }
+        });
+
+        socket.on("endProjectileLoop", () => {
+            projectileLoopOn = false;
+            clearInterval(projectileTimer);
         });
  
         socket.on("move", (playerAction) => {

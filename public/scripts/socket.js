@@ -72,6 +72,10 @@ const Socket = (function() {
         socket.on("setBootsPos", (bootsPos) => {
             Game.setBoots(bootsPos);
         })
+        
+        socket.on("spawnProjectile", (command) => {
+            Game.addProjectile(command);
+        });
 
         // Start the game
         socket.on("startGame", (gameAttr) => {
