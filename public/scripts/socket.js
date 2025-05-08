@@ -77,6 +77,10 @@ const Socket = (function() {
             Game.addProjectile(command);
         });
 
+        socket.on("killPlayer", (player) => {
+            Game.killPlayer(player);
+        })
+
         // Start the game
         socket.on("startGame", (gameAttr) => {
             const gemColor = gameAttr.gemColor;

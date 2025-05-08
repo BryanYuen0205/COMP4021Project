@@ -12,6 +12,7 @@ const Projectile = function(ctx, x, y, gameArea, direction) {
     // For now, want to implement projectile as an orb, and not worry about 
     // directional animation. Below we set up the animation.
     const projectileSequence =  {x: 0, y: 0, width: 20, height: 20, count: 2, timing: 100, loop: true};
+    
     const sprite = Sprite(ctx, x, y);
     /** Direction and meaning:
      *  '0': Moving left
@@ -19,10 +20,9 @@ const Projectile = function(ctx, x, y, gameArea, direction) {
      *  '2': Moving right
      *  '3': Moving down
      */
-    const direction = direction;
 
     sprite.setSequence(projectileSequence)
-    .setScale(2)
+    .setScale(1.5)
     .setShadowScale({ x: 0.75, y: 0.2 })
     .useSheet("./images/projectile.png");
     
@@ -41,24 +41,21 @@ const Projectile = function(ctx, x, y, gameArea, direction) {
 
     const update = function(time) {
         /* Update the projectile's location based on input direction */
-        if (direction != 0) {
-            let { x, y } = sprite.getXY();
+        let { x, y } = sprite.getXY();
 
-            /** Move the projectile. 
-             * 1 frame is 60th of a second, so 1/60th of the number of pixels to be moved
-             * in one second.
-            */
-            switch (direction) {
-                case 0: x -= speed / 60; break;
-                case 1: y -= speed / 60; break;
-                case 2: x += speed / 60; break;
-                case 3: y += speed / 60; break;
-            }
-
-            /* Set the new position if it is within the game area */
-            if (gameArea.isPointInBox(x, y))
-                sprite.setXY(x, y);
+        /** Move the projectile. 
+         * 1 frame is 60th of a second, so 1/60th of the number of pixels to be moved
+         * in one second.
+        */
+        switch (direction) {
+            case 0: x -= speed / 60; break;
+            case 1: y -= speed / 60; break;
+            case 2: x += speed / 60; break;
+            case 3: y += speed / 60; break;
         }
+
+        /* Set the new position if it is within the game area */
+        sprite.setXY(x, y);
 
         /* Update the sprite object */
         sprite.update(time);

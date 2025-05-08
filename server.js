@@ -58,23 +58,24 @@ function randomPosition(area) {
  */
 function generateProjectileSpawn(area, direction) {
     // area: { left: minX, right: maxX, top: minY, bottom: maxY}
+    //debug
     let x, y;
     switch (direction) {
-        case 0: // left:    spawn minX, randomY
-            x = area.left;
-            y = Math.random() * (area.bottom - area.top);
+        case 0: // left:    spawn maxX, randomY
+            x = area.right + 60;
+            y = area.top + Math.random() * (area.bottom - area.top);
             break;
-        case 1: // up:      spawn randomX, minY   
-            x = Math.random() * (area.right - area.left);
-            y = area.top;
+        case 1: // up:      spawn randomX, maxY   
+            x = area.left + Math.random() * (area.right - area.left);
+            y = area.bottom + 60;
             break;
-        case 2: // right:   spawn maxX, randomY
-            x = area.right;
-            y = Math.random() * (area.bottom - area.top);
+        case 2: // right:   spawn minX, randomY
+            x = area.left - 60;
+            y = area.top + Math.random() * (area.bottom - area.top);
             break;
-        case 3: // down:    spawn randomX, maxY
-            x = Math.random() * (area.right - area.left);
-            y = area.bottom;
+        case 3: // down:    spawn randomX, minY
+            x = area.left + Math.random() * (area.right - area.left);
+            y = area.top - 60;
             break;
         default:
             console.log("Error: generateProjectileCommand() in server.js:")
@@ -83,6 +84,11 @@ function generateProjectileSpawn(area, direction) {
             y = -1;
             break;
     }
+    // debug
+    // console.log("Generating projectile commands:")
+    // console.log("\tx: %i", x)
+    // console.log("\ty: %i", y)
+    // console.log("\tdir: %i", direction)
     return {x, y}
 }
 
@@ -90,12 +96,16 @@ function broadcastProjectileCommand(area) {
     const direction = Math.floor(Math.random() * 4); //generate random direction, 0-3
     const spawn = generateProjectileSpawn(area,direction);
     const command = {direction, spawn};
+    // console.log("Broadcasting projectile command:");
+    // console.log("spawn:", spawn);
+    // console.log("dir: %i", direction);
     io.emit("spawnProjectile", command);
 }
 
 function scrambleInterval(interval) {
     // deviate interval by a value of +- 20% of the original interval.
     const scrambleBy = (Math.random() * (interval * 0.4)) - (interval * 0.2);
+    // console.log("scrambled interval: %i", Math.floor(interval + scrambleBy));
     return Math.floor(interval + scrambleBy);
 }
 
@@ -224,17 +234,24 @@ io.use((socket, next) => {
 
 // Enum to avoid magic numbers when changing projectileInterval.
 const projectileDifficulty = {
-    initial: 300,
-    easy: 250,
-    medium: 200,
-    hard: 100
+    initial: 350,
+    easy: 300,
+    medium: 225,
+    hard: 150
 }
 // We need to ensure that the projectile loop only runs once, even if there are 
 // two players. Keep track with this variable.
 let projectileLoopOn = false;
 let difficultyAdjustedRecently = false;
 let projectileTimer; 
+let projectileDifficultyTimer;
 let projectileInterval = projectileDifficulty.initial;
+
+function startProjectileLoop() {
+    if (!projectileLoopOn) return;
+    broadcastProjectileCommand(area);
+    projectileTimer = setTimeout(startProjectileLoop, scrambleInterval(projectileInterval));
+}
 
 io.on("connection", (socket) => {
     if(socket.request.session.user){     
@@ -258,27 +275,32 @@ io.on("connection", (socket) => {
             // console.log(onlineUsers); 
         });
 
+        // Increases the difficulty of the game. Logic in game.js
         socket.on("raiseProjectileDifficulty",() => {
             if (!difficultyAdjustedRecently) {
                 difficultyAdjustedRecently = true;
-                switch (projectileInterval) {
-                    case projectileDifficulty.initial:
-                        projectileInterval = projectileDifficulty.easy;
-                        break;
-                    case projectileDifficulty.easy:
-                        projectileInterval = projectileDifficulty.medium;
-                        break;
-                    case projectileDifficulty.medium:
-                        projectileInterval = projectileDifficulty.hard;
-                        break;
-                    case projectileDifficulty.hard:
-                        break;
-                }
-                // Do not allow updates within 1.5 seconds. This is to avoid double raising
-                // of difficulty in multiplayer mode.
-                console.log("Difficulty adjusted to: " + Object.keys(projectileDifficulty).find(key => projectileDifficulty[key] === projectileInterval));
-                setInterval(() => {
+                projectileDifficultyTimer = setInterval(() => {
+                    // Placed inside to see if adjustment won't repeat.
+                    switch (projectileInterval) {
+                        case projectileDifficulty.initial:
+                            projectileInterval = projectileDifficulty.easy;
+                            break;
+                        case projectileDifficulty.easy:
+                            projectileInterval = projectileDifficulty.medium;
+                            break;
+                        case projectileDifficulty.medium:
+                            projectileInterval = projectileDifficulty.hard;
+                            break;
+                        case projectileDifficulty.hard:
+                            break;
+                    }
+                    // Do not allow updates within 1.5 seconds. This is to avoid double raising
+                    // of difficulty in multiplayer mode.
+                    console.log("Difficulty adjusted to: " 
+                        + Object.keys(projectileDifficulty)
+                        .find(key => projectileDifficulty[key] === projectileInterval));
                     difficultyAdjustedRecently = false;
+                    clearInterval(projectileDifficultyTimer);
                 }, 1500)
             }
 
@@ -289,19 +311,13 @@ io.on("connection", (socket) => {
                 projectileInterval = projectileDifficulty.initial; // Ensure this is reset at start of game loop.
                 projectileLoopOn = true;
                 // start broadcasting at approximately `projectileInterval` milliseconds.
-                projectileTimer = setInterval(() => {
-                    if (projectileLoopOn) {
-                        broadcastProjectileCommand(area);
-                    } else {
-                        clearInterval(projectileTimer);
-                    }
-                }, scrambleInterval(projectileInterval))
+                startProjectileLoop();
             }
         });
 
         socket.on("endProjectileLoop", () => {
             projectileLoopOn = false;
-            clearInterval(projectileTimer);
+            clearTimeout(projectileTimer);
         });
  
         socket.on("move", (playerAction) => {
@@ -320,6 +336,11 @@ io.on("connection", (socket) => {
         socket.on("playerSlowDown", (player) => {
             console.log(player + " is FUCKING SLOW");
             io.emit("decreaseSpeed", player);
+        })
+
+        socket.on("hitProjectile", (player) => {
+            console.log(player + " has collided with a projectile and died.")
+            io.emit("killPlayer", player);
         })
 
         socket.on("getGemAttr", () => {

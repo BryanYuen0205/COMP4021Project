@@ -28,7 +28,8 @@ const Game = (function (){
     let collectedGems = 0;      // The number of gems collected in the game
     let remotePlayers = {};
     let gemColor, gemPosition, bootsPosition;
-
+    // Keep track of difficulty raises for projectile difficulty.
+    let difficultyRaised = [false, false, false];
     /* Create the game area */
     const gameArea = BoundingBox(context, 165, 60, 420, 800);
 
@@ -58,6 +59,7 @@ const Game = (function (){
     // command: {direction, {x, y}}
     const addProjectile = function(command) {
         let {direction, spawn} = command;
+        // console.log("Adding projectile at: (%i, %i)", spawn.x, spawn.y);
         projectileQueue.push(Projectile(context, spawn.x, spawn.y, gameArea, direction));
     }
     
@@ -205,6 +207,22 @@ const Game = (function (){
             socket.emit("playerSlowDown", currPlayerUsername);
         }
     }
+    // Let server know this session's player has collided with a projectile
+    const emitHitProjectile = function() {
+        const socket = window.Socket.getSocket();
+        if(socket) {
+            socket.emit("hitProjectile", currPlayerUsername);
+        }
+    }
+    // Kill player.
+    const killPlayer = function(player) {
+        console.log(player + " has died.");
+        if (remotePlayers[player]) {
+            remotePlayers[player].die();
+        } else {
+            currPlayer.die();
+        }
+    }
     
     // Initiate the randomized projectile spawn loop on the server side.
     // Server should only run one randomized spawn loop, so make sure it doesn't
@@ -238,6 +256,7 @@ const Game = (function (){
     // Function to start the game
     const startGame = function (){
         /* Hide the start screen */
+        projectileQueue = [];
         $("#game-start").hide();
         // sounds.background.play();
         // gem.randomize(gameArea);
@@ -245,7 +264,6 @@ const Game = (function (){
         boots.randomize(bootsPosition);
         emitStartProjectileLoop();
         // console.log(gameArea.getPoints());
-        
 
         /* Handle the keydown of arrow keys and spacebar */
         $(document).on("keydown", function(event) {
@@ -324,15 +342,18 @@ const Game = (function (){
         // Yes... this will cause the game to send 60 ish emits to the server, but it is 
         // handled on the server via a setTimeout and a difficultyAdjustedRecently variable.
         // Raise difficulty to easy
-        if(timeRemaining == Math.ceil(totalGameTime * 0.9)) {
+        if(timeRemaining == Math.ceil(totalGameTime * 0.9) && !difficultyRaised[0]) {
+            difficultyRaised[0] = true;
             emitRaiseProjectileDifficulty();
         }
         // raise difficulty to medium
-        if(timeRemaining == Math.ceil(totalGameTime * 0.6)) {
+        if(timeRemaining == Math.ceil(totalGameTime * 0.6) && !difficultyRaised[1]) {
+            difficultyRaised[1] = true;
             emitRaiseProjectileDifficulty();
         }
         // raise difficulty to hard
-        if(timeRemaining == Math.ceil(totalGameTime * 0.3)) {
+        if(timeRemaining == Math.ceil(totalGameTime * 0.3) && !difficultyRaised[2]) {
+            difficultyRaised[2] = true;
             emitRaiseProjectileDifficulty();
         }
 
@@ -343,6 +364,10 @@ const Game = (function (){
             $("#game-over").show();
             $("#final-gems").html(collectedGems);
             emitCollectedGems();
+            emitEndProjectileLoop();
+            for (let i = 0; i < difficultyRaised.length; i++) {
+                difficultyRaised[i] = false;
+            }
             // sounds.background.pause();
             // sounds.collect.pause();
             // sounds.gameover.play();
@@ -358,6 +383,17 @@ const Game = (function (){
             fires[i].update(now);
         for(let i = 0; i < bombs.length; i++)
             bombs[i].update(now);
+        for(const projectile of projectileQueue) {
+            //console.log("updating projectiles...");
+            projectile.update(now);
+            let oldestXY = projectileQueue[0].getXY();
+            // console.log("Oldest X, Y: (%i, %i)", oldestXY.x, oldestXY.y);
+            if(oldestXY.x < 0 || oldestXY.x > 860 || oldestXY.y < 0 || oldestXY.y > 480) {
+                projectileQueue.shift();
+                // console.log("Number of projectiles: %i", projectileQueue.length);
+            }
+        }
+
 
         /* TODO */
         /* Randomize the gem and collect the gem here */
@@ -374,9 +410,24 @@ const Game = (function (){
 
         let playerBoundingBox = currPlayer.getBoundingBox();
         let gemPos = gem.getXY();       
-        let boostPos = boots.getXY();           
+        let boostPos = boots.getXY();
+        let playerIsDead = currPlayer.getCondition();     
         
-        if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y)){
+        // Death logic for collision with projectile.
+        if(!playerIsDead) {
+            console.log("player is not yet dead");
+            for(const projectile of projectileQueue) {
+                let projBB = projectile.getBoundingBox();
+                if (playerBoundingBox.intersect(projBB)) {
+                    console.log("myPlayer has hit a projectile");
+                    // currPlayer.die() executes after server notifies all players.
+                    emitHitProjectile();
+                    break;
+                }
+            }
+        }
+        
+        if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y) && !playerIsDead){
             collectedGems++;
             getGemAttr();
             
@@ -384,7 +435,7 @@ const Game = (function (){
             // sounds.collect.play();
         }
 
-        if(playerBoundingBox.isPointInBox(boostPos.x, boostPos.y)){
+        if(playerBoundingBox.isPointInBox(boostPos.x, boostPos.y) && !playerIsDead){
             console.log("Collected boots powerup");
             getBootsPos();
             // sounds.collect.play();
@@ -409,6 +460,8 @@ const Game = (function (){
             fires[i].draw();
         for(let i = 0; i < bombs.length; i++)
             bombs[i].draw(now);
+        for(let i = 0; i < projectileQueue.length; i++)
+            projectileQueue[i].draw(now);
 
         /* Process the next frame */
         requestAnimationFrame(doFrame);
@@ -431,6 +484,7 @@ const Game = (function (){
         increaseSpeed,
         decreaseSpeed,
         addProjectile,
+        killPlayer,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };
