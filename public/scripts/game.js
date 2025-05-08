@@ -365,6 +365,7 @@ const Game = (function (){
             $("#final-gems").html(collectedGems);
             emitCollectedGems();
             emitEndProjectileLoop();
+            // reset game state.
             for (let i = 0; i < difficultyRaised.length; i++) {
                 difficultyRaised[i] = false;
             }
@@ -372,6 +373,25 @@ const Game = (function (){
             // sounds.collect.pause();
             // sounds.gameover.play();
             return;
+        }
+        // Handle game over for all players dead:
+        let playerIsDead = currPlayer.getCondition();
+        if(playerIsDead) {
+            for(let remotePlayer in remotePlayers) {
+                // Should only be one remote player...
+                if (remotePlayers[remotePlayer].getCondition()) {
+                    $("#game-over").show();
+                    $("#final-gems").html(collectedGems);
+                    emitCollectedGems();
+                    emitEndProjectileLoop();
+                    // reset game state.
+                    for (let i = 0; i < difficultyRaised.length; i++) {
+                        difficultyRaised[i] = false;
+                    }
+                    return;
+
+                }
+            }
         }
 
         /* Update the sprites */
@@ -411,7 +431,6 @@ const Game = (function (){
         let playerBoundingBox = currPlayer.getBoundingBox();
         let gemPos = gem.getXY();       
         let boostPos = boots.getXY();
-        let playerIsDead = currPlayer.getCondition();     
         
         // Death logic for collision with projectile.
         if(!playerIsDead) {

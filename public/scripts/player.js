@@ -29,7 +29,7 @@ const Player = function(ctx, x, y, gameArea) {
 
     // The sprite object is configured for the player sprite here.
     sprite.setSequence(sequences.idleDown)
-          .setScale(2)
+          .setScale(1.5)
           .setShadowScale({ x: 0.75, y: 0.20 })
           .useSheet("./images/player_sprite.png");
 
@@ -42,7 +42,7 @@ const Player = function(ctx, x, y, gameArea) {
     let direction = 0;
 
     // This is the moving speed (pixels per second) of the player
-    let speed = 150;
+    let speed = 200;
 
     // Define death:
     let isDead = false;
