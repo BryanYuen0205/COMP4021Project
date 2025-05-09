@@ -13,11 +13,11 @@ const Game = (function (){
     const context = cv.getContext("2d");
 
     /* Create the sounds */
-    // const sounds = {
-    //     background: new Audio("./music/background.mp3"),
-    //     collect: new Audio("./music/collect.mp3"),
-    //     gameover: new Audio("./music/gameover.mp3")
-    // };
+    const sounds = {
+        background: new Audio("./music/background2.mp3"),
+        collect: new Audio("./music/collect.mp3"),
+        gameover: new Audio("./music/gameover2.mp3")
+    };
 
     const totalGameTime = 10;   // Total game time in seconds
     const gemMaxAge = 3000;     // The maximum age of the gems in milliseconds
@@ -58,7 +58,7 @@ const Game = (function (){
 
     const resetGameState = function (){
         console.log("Game is being reset");
-        
+        sounds.background.pause();
         gameStartTime = 0;
         collectedGems = 0;
         // remotePlayers = {};
@@ -279,9 +279,11 @@ const Game = (function (){
     // Function to start the game
     const startGame = function (){
         /* Hide the start screen */
+
         projectileQueue = [];
         $("#game-start").hide();
-        // sounds.background.play();
+        sounds.background.play();
+        sounds.background.volume = 0.05;
         // gem.randomize(gameArea);
         gem.randomize(gemColor, gemPosition);
         boots.randomize(bootsPosition);
@@ -409,6 +411,7 @@ const Game = (function (){
         }
         // Handle game over for all players dead:
         if(playerIsDead) {
+            sounds.gameover.play();
             for(let remotePlayer in remotePlayers) {
                 // Should only be one remote player...
                 if (remotePlayers[remotePlayer].getCondition()) {
@@ -426,6 +429,7 @@ const Game = (function (){
 
                 }
             }
+            // sounds.background.pause();
         }
 
         /* Update the sprites */
@@ -473,7 +477,7 @@ const Game = (function (){
                 let projBB = projectile.getBoundingBox();
                 if (playerBoundingBox.intersect(projBB)) {
                     console.log("myPlayer has hit a projectile");
-                    // currPlayer.die() executes after server notifies all players.
+                    // currPlayer.die() executes after server notifies all players
                     // This also emits the current player's score.
                     emitHitProjectile();
                     timeSurvived = totalGameTime - timeRemaining;
