@@ -35,6 +35,16 @@ const Socket = (function() {
             Game.addExistingRemotePlayers(onlineUsers);
         })
 
+        socket.on("leaderboard", (top10) => {
+            for (let i = 0; i < top10.length; i++) {
+                let leaderboardRank = '#' + String(i+1);
+                let leaderboardString = "\"" + top10[i].name + "\""
+                    + " (Time: " + String(top10[i].timeSurvived)
+                    + " Gems: " + String(top10[i].collectedGems) + ")";
+                $(leaderboardRank).html(leaderboardString);
+            }
+        })
+
         // Add new player
         socket.on("newPlayer", (player) => {
             Game.addNewRemotePlayer(player);

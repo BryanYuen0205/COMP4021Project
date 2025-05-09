@@ -132,6 +132,16 @@ const GameOverMenu = (function(){
     const initialize = function(){
         $("#leaderboard-button").on("click", () => {
             // console.log("Leaderboard button clicked bro");
+            $("#leaderboard-overlay").show();
+            const socket = window.Socket.getSocket();
+            if (socket) {
+                socket.emit("getLeaderboard");
+            }
+        })
+        
+
+        $('#close-leaderboard').on("click", () => {
+            $("#leaderboard-overlay").hide();
         })
 
         $('#menu-button').on("click", () => {
