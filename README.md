@@ -35,12 +35,6 @@ Take control with intuitive, responsive movement-navigate your way through the c
 
 ## NES CSS Library
 
-Take control with intuitive, responsive movement-navigate your way through the chaos using the arrow keys. When the action heats up and you need that extra burst of speed, hit the spacebar to activate a powerful speed boost. Use it wisely: it can help you slip through impossible gaps or, if mistimed, send you straight into danger! Mastering these controls is key to surviving the relentless onslaught and climbing the leaderboard.
-
-# External Resources Used
-
-## NES CSS Library
-
 https://nostalgic-css.github.io/NES.css/#
 
 ## Pixel Art Game Backgrounds
