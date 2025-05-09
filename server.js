@@ -8,9 +8,10 @@ const { log } = require("console");
 const onlineUsers = {};
 const players = {};
 // const waitingPlayers = [];
-let waitingPlayers = {};
+let waitingPlayers = [];
 const currentPlayer = null;
 const area = {top: 165, left:60, bottom: 420, right: 800};
+let playerScores = [];
 
 // Create the Express app
 const app = express();
@@ -382,6 +383,13 @@ io.on("connection", (socket) => {
         })
 
         socket.on("logScore", ({player, collectedGems, timeSurvived}) => {
+            // This should ensure that the playerScores array is always length 2.
+            // These 2 values should always be the 2 most recent players' scores.
+            if(playerScores.length >= 2) {
+                playerScores.shift();
+            }
+            playerScores.push({player, collectedGems, timeSurvived});
+            console.log("Updated playerscores: ", playerScores);
             let score = JSON.parse(fs.readFileSync("data/leaderboard.json"));
             // Case for if player already has a score in the database.
             if (player in score) {
@@ -417,6 +425,23 @@ io.on("connection", (socket) => {
             }
             fs.writeFileSync("data/leaderboard.json", JSON.stringify(score, null, " "));
         })
+
+        // return winner and result (draw or not.)
+        socket.on("getWinner", () => {
+            let winner = playerScores[0];
+            let draw = false;
+            if (playerScores[1].timeSurvived > winner.timeSurvived) {
+                winner = playerScores[1];
+            } else if (playerScores[1].timeSurvived == winner.timeSurvived 
+                    && playerScores[1].collectedGems > winner.collectedGems) {
+                winner = playerScores[1];
+            } else if (playerScores[1].timeSurvived == winner.timeSurvived
+                    && playerScores[1].collectedGems == winner.collectedGems) {
+                draw = true;
+            }
+            console.log(draw, winner);
+            io.emit("winner", {draw, winner})
+        }) 
 
         socket.on("joinMultiplayer", () => {
             console.log(username + " is joining mp");
