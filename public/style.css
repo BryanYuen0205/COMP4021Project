@@ -295,6 +295,9 @@ canvas {
 /* #instructions-overlay{
     display: none;
 } */
+#leaderboard-overlay{
+    display: none;
+}
 #waiting-overlay text {
     font-size: 150%;
     fill: white;

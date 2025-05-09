@@ -266,6 +266,29 @@ io.on("connection", (socket) => {
         // REMOVE if not working 
         io.emit("newPlayer", {username: username, x:427, y: 240});
 
+        socket.on("getLeaderboard", () => {
+            let scores = JSON.parse(fs.readFileSync("data/leaderboard.json"));
+
+            // Convert the object to an array of entries with name and stats
+            const scoresArray = Object.entries(scores).map(([name, stats]) => ({
+                name,
+                ...stats
+            }));
+            
+            // Sort the array by timeSurvived descending, then collectedGems descending
+            scoresArray.sort((a, b) => {
+                if (b.timeSurvived !== a.timeSurvived) {
+                    return b.timeSurvived - a.timeSurvived;
+                }
+                return b.collectedGems - a.collectedGems;
+            });
+            
+            // Extract at most 10 elements
+            const top10 = scoresArray.slice(0, 10);
+            
+            // top10 is now your sorted list
+            io.emit("leaderboard", top10);
+        });
         socket.on("get players", () => {
             socket.emit("players", onlineUsers);
         });
