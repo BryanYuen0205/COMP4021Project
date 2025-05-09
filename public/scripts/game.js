@@ -4,6 +4,7 @@ import BoundingBox from './bounding_box.js';
 import Fire from './fire.js';
 import Bomb from './bomb.js';
 import Boots from './boots.js';
+import Projectile from './projectile.js';
 
 const Game = (function (){
     
@@ -25,9 +26,11 @@ const Game = (function (){
     let currPlayerUsername = null;
     let gameStartTime = 0;      // The timestamp when the game starts
     let collectedGems = 0;      // The number of gems collected in the game
+    let timeSurvived = 0;       // Time in seconds the user survived for.
     let remotePlayers = {};
     let gemColor, gemPosition, bootsPosition;
-
+    // Keep track of difficulty raises for projectile difficulty.
+    let difficultyRaised = [false, false, false];
     /* Create the game area */
     const gameArea = BoundingBox(context, 165, 60, 420, 800);
 
@@ -42,6 +45,9 @@ const Game = (function (){
         Bomb(context, gameAreaPoints.bottomLeft[0], gameAreaPoints.bottomLeft[1]),
         Bomb(context, gameAreaPoints.topRight[0], gameAreaPoints.topRight[1])
     ]
+    
+    // Queue for spawned projectiles. 
+    let projectileQueue = [];
 
     /* Create the sprites in the game */
     // The Gem
@@ -49,7 +55,7 @@ const Game = (function (){
     
     // The Boots powerup
     let boots = Boots(context, 427, 350);
-    
+
     const resetGameState = function (){
         console.log("Game is being reset");
         
@@ -67,6 +73,14 @@ const Game = (function (){
         // currPlayerUsername = null;
     }
 
+    // add a projectile to the queue.
+    // command: {direction, {x, y}}
+    const addProjectile = function(command) {
+        let {direction, spawn} = command;
+        // console.log("Adding projectile at: (%i, %i)", spawn.x, spawn.y);
+        projectileQueue.push(Projectile(context, spawn.x, spawn.y, gameArea, direction));
+    }
+    
     const setGemAttr = function (color, pos){
         // console.log("Setting up gem attributes with " + color + " and " + pos.x + " " + pos.y);
         gemColor = color;
@@ -165,12 +179,17 @@ const Game = (function (){
     }
 
     // Emits number of gems collected by current player
-    const emitCollectedGems = function (){
+    const emitScore = function (){
         // console.log("Emitting collected Gems");
         
         const socket = window.Socket.getSocket();
         if(socket){
-            socket.emit("logCollectedGems", {player:currPlayerUsername, collectedGems:collectedGems});
+            socket.emit("logScore", 
+            { 
+                player:currPlayerUsername, 
+                collectedGems:collectedGems,
+                timeSurvived: timeSurvived
+            });
         }
     }
 
@@ -211,16 +230,62 @@ const Game = (function (){
             socket.emit("playerSlowDown", currPlayerUsername);
         }
     }
+    // Let server know this session's player has collided with a projectile
+    const emitHitProjectile = function() {
+        const socket = window.Socket.getSocket();
+        if(socket) {
+            socket.emit("hitProjectile", currPlayerUsername);
+        }
+    }
+    // Kill player.
+    const killPlayer = function(player) {
+        console.log(player + " has died.");
+        if (remotePlayers[player]) {
+            remotePlayers[player].die();
+        } else {
+            currPlayer.die();
+        }
+    }
+    
+    // Initiate the randomized projectile spawn loop on the server side.
+    // Server should only run one randomized spawn loop, so make sure it doesn't
+    // run twice for some reason.
+    // This function should run in startGame().
+    const emitStartProjectileLoop = function() {
+        const socket = window.Socket.getSocket();
+        if(socket) {
+            socket.emit("startProjectileLoop");
+        }
+    }
+
+    // End projectile loop on serverside. 
+    // Should run when the game is over for both players.
+    const emitEndProjectileLoop = function() {
+        const socket = window.Socket.getSocket();
+        if (socket) {
+            socket.emit("endProjectileLoop");
+        }
+    }
+
+    // Emit message to server to increase the frequency of projectile spawn.
+    const emitRaiseProjectileDifficulty = function() {
+        const socket = window.Socket.getSocket();
+        if (socket) {
+            socket.emit("raiseProjectileDifficulty");
+        }
+    }
     
 
     // Function to start the game
     const startGame = function (){
         /* Hide the start screen */
+        projectileQueue = [];
         $("#game-start").hide();
         // sounds.background.play();
         // gem.randomize(gameArea);
         gem.randomize(gemColor, gemPosition);
         boots.randomize(bootsPosition);
+        emitStartProjectileLoop();
         // console.log(gameArea.getPoints());
         
         $(document).off("keydown");
@@ -299,19 +364,67 @@ const Game = (function (){
         $("#time-remaining").text(timeRemaining);
 
 
+        // Yes... this will cause the game to send 60 ish emits to the server, but it is 
+        // handled on the server via a setTimeout and a difficultyAdjustedRecently variable.
+        // Raise difficulty to easy
+        if(timeRemaining == Math.ceil(totalGameTime * 0.9) && !difficultyRaised[0]) {
+            difficultyRaised[0] = true;
+            emitRaiseProjectileDifficulty();
+        }
+        // raise difficulty to medium
+        if(timeRemaining == Math.ceil(totalGameTime * 0.6) && !difficultyRaised[1]) {
+            difficultyRaised[1] = true;
+            emitRaiseProjectileDifficulty();
+        }
+        // raise difficulty to hard
+        if(timeRemaining == Math.ceil(totalGameTime * 0.3) && !difficultyRaised[2]) {
+            difficultyRaised[2] = true;
+            emitRaiseProjectileDifficulty();
+        }
+
+        let playerIsDead = currPlayer.getCondition();
         /* TODO */
         /* Handle the game over situation here */
         if(timeRemaining == 0){
+            // If not dead by the end, then time survived is total game time.
+            if (!playerIsDead) timeSurvived = totalGameTime;
             $("#game-over").show();
+            $("#time-survived").html(timeSurvived);
             $("#final-gems").html(collectedGems);
-            emitCollectedGems();
+            // add time survived id to html.
+            // Only emit the score if the player hasn't died already.
+            if(!currPlayer.getCondition()) emitScore();
+            emitEndProjectileLoop();
             resetGameState();
             // $(document).off("keydown");
             // $(document).off("keyup");
+            // reset game state.
+            for (let i = 0; i < difficultyRaised.length; i++) {
+                difficultyRaised[i] = false;
+            }
             // sounds.background.pause();
             // sounds.collect.pause();
             // sounds.gameover.play();
             return;
+        }
+        // Handle game over for all players dead:
+        if(playerIsDead) {
+            for(let remotePlayer in remotePlayers) {
+                // Should only be one remote player...
+                if (remotePlayers[remotePlayer].getCondition()) {
+                    $("#game-over").show();
+                    $("#time-survived").html(timeSurvived);
+                    $("#final-gems").html(collectedGems);
+                    // Once again, add time survived to end game screen.
+                    emitEndProjectileLoop();
+                    // reset game state.
+                    for (let i = 0; i < difficultyRaised.length; i++) {
+                        difficultyRaised[i] = false;
+                    }
+                    return;
+
+                }
+            }
         }
 
         /* Update the sprites */
@@ -323,6 +436,17 @@ const Game = (function (){
             fires[i].update(now);
         for(let i = 0; i < bombs.length; i++)
             bombs[i].update(now);
+        for(const projectile of projectileQueue) {
+            //console.log("updating projectiles...");
+            projectile.update(now);
+            let oldestXY = projectileQueue[0].getXY();
+            // console.log("Oldest X, Y: (%i, %i)", oldestXY.x, oldestXY.y);
+            if(oldestXY.x < 0 || oldestXY.x > 860 || oldestXY.y < 0 || oldestXY.y > 480) {
+                projectileQueue.shift();
+                // console.log("Number of projectiles: %i", projectileQueue.length);
+            }
+        }
+
 
         /* TODO */
         /* Randomize the gem and collect the gem here */
@@ -339,9 +463,26 @@ const Game = (function (){
 
         let playerBoundingBox = currPlayer.getBoundingBox();
         let gemPos = gem.getXY();       
-        let boostPos = boots.getXY();           
+        let boostPos = boots.getXY();
         
-        if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y)){
+        // Death logic for collision with projectile.
+        if(!playerIsDead) {
+            console.log("player is not yet dead");
+            for(const projectile of projectileQueue) {
+                let projBB = projectile.getBoundingBox();
+                if (playerBoundingBox.intersect(projBB)) {
+                    console.log("myPlayer has hit a projectile");
+                    // currPlayer.die() executes after server notifies all players.
+                    // This also emits the current player's score.
+                    emitHitProjectile();
+                    timeSurvived = totalGameTime - timeRemaining;
+                    emitScore();
+                    break;
+                }
+            }
+        }
+        
+        if(playerBoundingBox.isPointInBox(gemPos.x, gemPos.y) && !playerIsDead){
             collectedGems++;
             getGemAttr();
             
@@ -374,6 +515,8 @@ const Game = (function (){
             fires[i].draw();
         for(let i = 0; i < bombs.length; i++)
             bombs[i].draw(now);
+        for(let i = 0; i < projectileQueue.length; i++)
+            projectileQueue[i].draw(now);
 
         /* Process the next frame */
         requestAnimationFrame(doFrame);
@@ -401,6 +544,8 @@ const Game = (function (){
         setBoots,
         increaseSpeed,
         decreaseSpeed,
+        addProjectile,
+        killPlayer,
         // removeRemotePlayer,
         getPlayerPosition: () => player.getXY()
     };

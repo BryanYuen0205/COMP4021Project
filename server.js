@@ -52,6 +52,64 @@ function randomPosition(area) {
     return {x, y};
 }
 
+/**
+ * Generate random starting positions for projectiles according to specified
+ * direction. 
+ * Returns spawn locations {x, y} according to provided area.
+ */
+function generateProjectileSpawn(area, direction) {
+    // area: { left: minX, right: maxX, top: minY, bottom: maxY}
+    //debug
+    let x, y;
+    switch (direction) {
+        case 0: // left:    spawn maxX, randomY
+            x = area.right + 60;
+            y = area.top + Math.random() * (area.bottom - area.top);
+            break;
+        case 1: // up:      spawn randomX, maxY   
+            x = area.left + Math.random() * (area.right - area.left);
+            y = area.bottom + 60;
+            break;
+        case 2: // right:   spawn minX, randomY
+            x = area.left - 60;
+            y = area.top + Math.random() * (area.bottom - area.top);
+            break;
+        case 3: // down:    spawn randomX, minY
+            x = area.left + Math.random() * (area.right - area.left);
+            y = area.top - 60;
+            break;
+        default:
+            console.log("Error: generateProjectileCommand() in server.js:")
+            console.log("\tInvalid direction provided as argument.")
+            x = -1;
+            y = -1;
+            break;
+    }
+    // debug
+    // console.log("Generating projectile commands:")
+    // console.log("\tx: %i", x)
+    // console.log("\ty: %i", y)
+    // console.log("\tdir: %i", direction)
+    return {x, y}
+}
+
+function broadcastProjectileCommand(area) {
+    const direction = Math.floor(Math.random() * 4); //generate random direction, 0-3
+    const spawn = generateProjectileSpawn(area,direction);
+    const command = {direction, spawn};
+    // console.log("Broadcasting projectile command:");
+    // console.log("spawn:", spawn);
+    // console.log("dir: %i", direction);
+    io.emit("spawnProjectile", command);
+}
+
+function scrambleInterval(interval) {
+    // deviate interval by a value of +- 20% of the original interval.
+    const scrambleBy = (Math.random() * (interval * 0.4)) - (interval * 0.2);
+    // console.log("scrambled interval: %i", Math.floor(interval + scrambleBy));
+    return Math.floor(interval + scrambleBy);
+}
+
 // Handle the /register endpoint
 app.post("/register", (req, res) => {
     // Get the JSON data from the body
@@ -175,6 +233,26 @@ io.use((socket, next) => {
     chatSession(socket.request, {}, next);
 });
 
+// Enum to avoid magic numbers when changing projectileInterval.
+const projectileDifficulty = {
+    initial: 350,
+    easy: 300,
+    medium: 225,
+    hard: 150
+}
+// We need to ensure that the projectile loop only runs once, even if there are 
+// two players. Keep track with this variable.
+let projectileLoopOn = false;
+let difficultyAdjustedRecently = false;
+let projectileTimer; 
+let projectileDifficultyTimer;
+let projectileInterval = projectileDifficulty.initial;
+
+function startProjectileLoop() {
+    if (!projectileLoopOn) return;
+    broadcastProjectileCommand(area);
+    projectileTimer = setTimeout(startProjectileLoop, scrambleInterval(projectileInterval));
+}
 
 io.on("connection", (socket) => {
     if(socket.request.session.user){     
@@ -190,12 +268,57 @@ io.on("connection", (socket) => {
 
         socket.on("get players", () => {
             socket.emit("players", onlineUsers);
-        })
+        });
 
         socket.on("disconnect", () => {
             delete onlineUsers[socket.request.session.user.username];
             // io.emit("remove user", JSON.stringify({username, avatar, name}));
             // console.log(onlineUsers); 
+        });
+
+        // Increases the difficulty of the game. Logic in game.js
+        socket.on("raiseProjectileDifficulty",() => {
+            if (!difficultyAdjustedRecently) {
+                difficultyAdjustedRecently = true;
+                projectileDifficultyTimer = setInterval(() => {
+                    // Placed inside to see if adjustment won't repeat.
+                    switch (projectileInterval) {
+                        case projectileDifficulty.initial:
+                            projectileInterval = projectileDifficulty.easy;
+                            break;
+                        case projectileDifficulty.easy:
+                            projectileInterval = projectileDifficulty.medium;
+                            break;
+                        case projectileDifficulty.medium:
+                            projectileInterval = projectileDifficulty.hard;
+                            break;
+                        case projectileDifficulty.hard:
+                            break;
+                    }
+                    // Do not allow updates within 1.5 seconds. This is to avoid double raising
+                    // of difficulty in multiplayer mode.
+                    console.log("Difficulty adjusted to: " 
+                        + Object.keys(projectileDifficulty)
+                        .find(key => projectileDifficulty[key] === projectileInterval));
+                    difficultyAdjustedRecently = false;
+                    clearInterval(projectileDifficultyTimer);
+                }, 1500)
+            }
+
+        });
+
+        socket.on("startProjectileLoop", () => {
+            if (!projectileLoopOn) {
+                projectileInterval = projectileDifficulty.initial; // Ensure this is reset at start of game loop.
+                projectileLoopOn = true;
+                // start broadcasting at approximately `projectileInterval` milliseconds.
+                startProjectileLoop();
+            }
+        });
+
+        socket.on("endProjectileLoop", () => {
+            projectileLoopOn = false;
+            clearTimeout(projectileTimer);
         });
  
         socket.on("move", (playerAction) => {
@@ -216,6 +339,11 @@ io.on("connection", (socket) => {
             io.emit("decreaseSpeed", player);
         })
 
+        socket.on("hitProjectile", (player) => {
+            console.log(player + " has collided with a projectile and died.")
+            io.emit("killPlayer", player);
+        })
+
         socket.on("getGemAttr", () => {
             const {x,y} = randomPosition(area);
             const gemColor = randomGemColor();
@@ -230,12 +358,40 @@ io.on("connection", (socket) => {
             io.emit("setBootsPos", {x,y})
         })
 
-        socket.on("logCollectedGems", ({player, collectedGems}) => {
-            // console.log("logging collected gems");
-            // console.log(player);
-            // console.log(collectedGems);        
+        socket.on("logScore", ({player, collectedGems, timeSurvived}) => {
             let score = JSON.parse(fs.readFileSync("data/leaderboard.json"));
-            score[player] = collectedGems;
+            // Case for if player already has a score in the database.
+            if (player in score) {
+                if (score[player].timeSurvived < timeSurvived) {
+                    console.log(player 
+                        + " survived longer this time. %i > %i",
+                        timeSurvived, score[player].timeSurvived);
+                    console.log("Logging better score...")
+                    console.log(player);
+                    console.log(collectedGems);   
+                    console.log(timeSurvived);  
+                    score[player] = {collectedGems, timeSurvived};
+                } 
+                else if (score[player].timeSurvived == timeSurvived
+                      && score[player].collectedGems < collectedGems) 
+                {
+                    console.log(player 
+                        + " collected more gems with the same time. %i > %i",
+                        collectedGems, score[player].collectedGems);
+                    console.log("Logging better score...")
+                    console.log(player);
+                    console.log(collectedGems);   
+                    console.log(timeSurvived);  
+                    score[player] = {collectedGems, timeSurvived};
+                }
+            } else // case where no entry is found.
+            {
+                console.log("No previous leaderboard entry found. Logging.")
+                console.log(player);
+                console.log(collectedGems);   
+                console.log(timeSurvived);  
+                score[player] = {collectedGems, timeSurvived};
+            }
             fs.writeFileSync("data/leaderboard.json", JSON.stringify(score, null, " "));
         })
 

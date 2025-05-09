@@ -1,7 +1,10 @@
 {
- "tony": {
-  "name": 5
+ "bryan": {
+  "collectedGems": 1,
+  "timeSurvived": 9
  },
- "bryan": 0,
- "bob": 0
+ "bob": {
+  "collectedGems": 4,
+  "timeSurvived": 14
+ }
 }
