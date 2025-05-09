@@ -71,6 +71,14 @@ const Socket = (function() {
         socket.on("setBootsPos", (bootsPos) => {
             Game.setBoots(bootsPos);
         })
+        
+        socket.on("spawnProjectile", (command) => {
+            Game.addProjectile(command);
+        });
+
+        socket.on("killPlayer", (player) => {
+            Game.killPlayer(player);
+        })
 
         // Update the number of players waiting
         socket.on("waitingRoomUpdate", ({ numWaitingPlayers }) => {

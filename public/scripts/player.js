@@ -29,7 +29,7 @@ const Player = function(ctx, x, y, gameArea) {
 
     // The sprite object is configured for the player sprite here.
     sprite.setSequence(sequences.idleDown)
-          .setScale(2)
+          .setScale(1.5)
           .setShadowScale({ x: 0.75, y: 0.20 })
           .useSheet("./images/player_sprite.png");
 
@@ -42,12 +42,23 @@ const Player = function(ctx, x, y, gameArea) {
     let direction = 0;
 
     // This is the moving speed (pixels per second) of the player
-    let speed = 150;
+    let speed = 200;
+
+    // Define death:
+    let isDead = false;
+
+    const die = function() {
+        isDead = true;
+    }
+
+    const getCondition = function() {
+        return isDead;
+    }
 
     // This function sets the player's moving direction.
     // - `dir` - the moving direction (1: Left, 2: Up, 3: Right, 4: Down)
     const move = function(dir) {
-        if (dir >= 1 && dir <= 4 && dir != direction) {
+        if (dir >= 1 && dir <= 4 && dir != direction && !isDead) {
             switch (dir) {
                 case 1: sprite.setSequence(sequences.moveLeft); break;
                 case 2: sprite.setSequence(sequences.moveUp); break;
@@ -86,7 +97,7 @@ const Player = function(ctx, x, y, gameArea) {
     // - `time` - The timestamp when this function is called
     const update = function(time) {
         /* Update the player if the player is moving */
-        if (direction != 0) {
+        if (direction != 0 && !isDead) {
             let { x, y } = sprite.getXY();
 
             /* Move the player */
@@ -97,8 +108,8 @@ const Player = function(ctx, x, y, gameArea) {
                 case 4: y += speed / 60; break;
             }
 
-            /* Set the new position if it is within the game area */
-            if (gameArea.isPointInBox(x, y))
+            /* Set the new position if it is within the game area  or if not dead */
+            if (gameArea.isPointInBox(x, y) && !isDead)
                 sprite.setXY(x, y);
         }
 
@@ -115,7 +126,9 @@ const Player = function(ctx, x, y, gameArea) {
         slowDown: slowDown,
         getBoundingBox: sprite.getBoundingBox,
         draw: sprite.draw,
-        update: update
+        update: update,
+        die: die,
+        getCondition: getCondition
     };
 };
 
