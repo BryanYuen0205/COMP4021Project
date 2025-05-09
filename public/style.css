@@ -275,7 +275,7 @@ canvas, #game-start, #game-over, #waiting-overlay {
     height: 480px;
 }
 canvas {
-    background: url(./images/background.png);
+    background: url(./images/terrace.png);
     background-size: cover;
 }
 #game-start, #game-over, #waiting-overlay, #game-wait{

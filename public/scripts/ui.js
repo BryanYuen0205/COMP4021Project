@@ -131,13 +131,22 @@ const GameOverMenu = (function(){
     // Click event for the Single Player button
     const initialize = function(){
         $("#leaderboard-button").on("click", () => {
-            console.log("Leaderboard button clicked bro");
+            // console.log("Leaderboard button clicked bro");
         })
 
         $('#menu-button').on("click", () => {
             $("#game-over-menu").hide();
             $("#menu-overlay").show()
-            console.log("Menu button clicked bro");
+            // console.log("Menu button clicked bro");
+        })
+
+        $('#play-again-button').on("click", () => {
+            const socket = window.Socket.getSocket();
+            if(socket){
+                $("#game-over-menu").hide();
+                $("#waiting-overlay").show();
+                socket.emit("joinMultiplayer");
+            }
         })
     
         $("#game-over-signout-button").on("click", () => {
