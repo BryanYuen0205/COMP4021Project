@@ -417,6 +417,7 @@ const Game = (function (){
                     $("#final-gems").html(collectedGems);
                     // Once again, add time survived to end game screen.
                     emitEndProjectileLoop();
+                    resetGameState();
                     // reset game state.
                     for (let i = 0; i < difficultyRaised.length; i++) {
                         difficultyRaised[i] = false;
