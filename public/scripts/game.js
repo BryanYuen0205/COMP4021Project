@@ -19,7 +19,7 @@ const Game = (function (){
         gameover: new Audio("./music/gameover2.mp3")
     };
 
-    const totalGameTime = 10;   // Total game time in seconds
+    const totalGameTime = 50;   // Total game time in seconds
     const gemMaxAge = 3000;     // The maximum age of the gems in milliseconds
     const bootsMaxAge = 2000;   // The maximum age of the boots in milliseconds
     let currPlayer = null;
@@ -36,15 +36,15 @@ const Game = (function (){
 
     const gameAreaPoints = gameArea.getPoints();
     
-    const fires = [
-        Fire(context, gameAreaPoints.bottomRight[0], gameAreaPoints.bottomRight[1]),
-        Fire(context, gameAreaPoints.topLeft[0], gameAreaPoints.topLeft[1]),
-    ]
+    // const fires = [
+    //     Fire(context, gameAreaPoints.bottomRight[0], gameAreaPoints.bottomRight[1]),
+    //     Fire(context, gameAreaPoints.topLeft[0], gameAreaPoints.topLeft[1]),
+    // ]
 
-    const bombs = [
-        Bomb(context, gameAreaPoints.bottomLeft[0], gameAreaPoints.bottomLeft[1]),
-        Bomb(context, gameAreaPoints.topRight[0], gameAreaPoints.topRight[1])
-    ]
+    // const bombs = [
+    //     Bomb(context, gameAreaPoints.bottomLeft[0], gameAreaPoints.bottomLeft[1]),
+    //     Bomb(context, gameAreaPoints.topRight[0], gameAreaPoints.topRight[1])
+    // ]
     
     // Queue for spawned projectiles. 
     let projectileQueue = [];
@@ -445,10 +445,10 @@ const Game = (function (){
         boots.update(now);
         currPlayer.update(now);
 
-        for(let i = 0; i < fires.length; i++)
-            fires[i].update(now);
-        for(let i = 0; i < bombs.length; i++)
-            bombs[i].update(now);
+        // for(let i = 0; i < fires.length; i++)
+        //     fires[i].update(now);
+        // for(let i = 0; i < bombs.length; i++)
+        //     bombs[i].update(now);
         for(const projectile of projectileQueue) {
             //console.log("updating projectiles...");
             projectile.update(now);
@@ -524,10 +524,10 @@ const Game = (function (){
             remotePlayers[username].draw();
         }
 
-        for(let i = 0; i < fires.length; i++)
-            fires[i].draw();
-        for(let i = 0; i < bombs.length; i++)
-            bombs[i].draw(now);
+        // for(let i = 0; i < fires.length; i++)
+        //     fires[i].draw();
+        // for(let i = 0; i < bombs.length; i++)
+        //     bombs[i].draw(now);
         for(let i = 0; i < projectileQueue.length; i++)
             projectileQueue[i].draw(now);
 

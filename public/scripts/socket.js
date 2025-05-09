@@ -42,7 +42,7 @@ const Socket = (function() {
                 document.getElementById("draw").textContent = "Draw! No one wins!";
                 document.getElementById("winner").textContent = "";
             } else {
-                document.getElementById("winner").textContent = (winner.player || winner) + " wins!";
+                document.getElementById("winner").textContent = (winner.player) + " wins!";
                 document.getElementById("draw").textContent = "";
             }
         });

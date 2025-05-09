@@ -38,6 +38,12 @@
 body {
     /* font-family: "Press Start 2P", sans-serif; */
     font-family: "Press Start 2P", sans-serif;
+    background-image:
+    url('https://www.transparenttextures.com/patterns/argyle.png'),  
+    linear-gradient(135deg, #a442ff, #fc9749); /* Bright base color gradient */
+    background-repeat: repeat;
+    background-size: auto;
+    overflow: hidden;
     min-width: 600px;
     min-height: 300px;
     height: 100vh;
@@ -309,7 +315,7 @@ canvas {
     text-anchor: middle;
 }
 #game-start #game-title {
-    font-size: 400%;
+    font-size: 200%;
     fill: url(#title-fill);
     stroke: black;
 }
@@ -319,25 +325,117 @@ canvas {
     text-anchor: middle;
 }
 
-#instructions-overlay {
+
+  /* #instructions-overlay {
     position: absolute;
     top: 10%;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
     max-width: 600px;
-    /* background: rgba(0, 0, 0, 0.75); */
-    /* border-radius: 10px; */
-    /* padding: 20px 30px; */
+    background: rgba(0, 0, 0, 0.85);
+    border: 4px double #fff;
+    border-radius: 10px;
+    padding: 30px;
     color: white;
-    /* font-family: 'Press Start 2P', monospace; */
-    font-size: 18px;
-    line-height: 1.5;
-    text-align: center;
-    /* box-shadow: 0 0 15px rgba(0,0,0,0.8); */
+    font-family: "Press Start 2P", monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    text-align: left;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
     user-select: none;
     z-index: 1000;
     display: none;
   }
+   */
 
+   #instructions-overlay {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: none;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #instructions-overlay .content {
+    background: var(--overlay-content-background);
+    padding: 30px;
+    border: 4px double #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
+    max-width: 600px;
+    width: 90%;
+    /* Removed scroll behavior */
+    max-height: none;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+
+  
+#instructions-overlay ul li {
+    margin-bottom: 10px;
+  }
+  
+  
+  /* #instructions-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .instructions-content {
+    background: var(--overlay-content-background);
+    padding: 20px;
+    max-height: 80%;
+    width: 90%;
+    max-width: 600px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 4px double #fff;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.9);
+    animation: slideUp 0.3s ease-out;
+  }
+   */
+  /* Optional scroll styling
+  #instructions-overlay .content::-webkit-scrollbar {
+    width: 8px;
+  }
+  #instructions-overlay .content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  #instructions-overlay .content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+   */
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
   

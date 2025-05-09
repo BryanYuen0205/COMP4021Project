@@ -10,5 +10,17 @@
  "bryan": {
   "name": "bryan",
   "password": "$2b$10$KpN.cF7r82RGQy5PST9SkOVV6f4/pRfiIu0owU9mOwhcmTkvtzmm."
+ },
+ "fnug": {
+  "name": "juno",
+  "password": "$2b$10$r3Z8O8OfVoecgknWzRltIeNdQ586WeqXbPIqLT1O45YUH4tpW/lKi"
+ },
+ "juno": {
+  "name": "juno",
+  "password": "$2b$10$Rm2LuwQxpfo4d8ZbWHWqO.w.3WqsDJxtuPZ4hDWtUvIFe/HCl.7JO"
+ },
+ "user1": {
+  "name": "billy",
+  "password": "$2b$10$HcZGy4s70ioYMJJL6vC4o.gSjmn.tfkNYikS1mQBPe691AI2yE0Ae"
  }
 }

@@ -86,10 +86,10 @@ const Menu = (function(){
             $("#instructions-overlay").hide();
         })
 
-        $("#singleplayer-button").on("click", () => {
-            console.log("sp button clicked bro");
-            $("#menu-overlay").hide();
-        })
+        // $("#singleplayer-button").on("click", () => {
+        //     console.log("sp button clicked bro");
+        //     $("#menu-overlay").hide();
+        // })
     
         $("#multiplayer-button").on("click", () => {
             console.log("mp button clicked bro");

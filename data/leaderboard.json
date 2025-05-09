@@ -1,10 +1,14 @@
 {
  "bryan": {
-  "collectedGems": 1,
-  "timeSurvived": 9
+  "collectedGems": 2,
+  "timeSurvived": 5
  },
  "bob": {
-  "collectedGems": 4,
-  "timeSurvived": 14
+  "collectedGems": 1,
+  "timeSurvived": 4
+ },
+ "user1": {
+  "collectedGems": 2,
+  "timeSurvived": 16
  }
 }

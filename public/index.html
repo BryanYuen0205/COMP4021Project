@@ -33,7 +33,7 @@
                 <stop offset="0.8" stop-color="purple" />
             </linearGradient>
         </defs>
-        <text id="game-title" x="50%" y="45%">GEM RUSH!</text>
+        <text id="game-title" x="50%" y="45%">2012: DODGEBALL!</text>
         <text x="50%" y="60%">Click here to start the game</text>
     </svg>
 
@@ -75,9 +75,9 @@
     <div class="content shadow col">
       <h2>Main Menu</h2>
       <button id="instructions-button" class="nes-btn is-primary">View Instructions</button>
-      <button id="singleplayer-button" class="nes-btn is-primary">Single Player</button>
+      <!-- <button id="singleplayer-button" class="nes-btn is-primary">Single Player</button> -->
       <button id="multiplayer-button" class="nes-btn is-primary">Multiplayer</button>
-      <button id="signout-button" class="nes-btn is-primary">Sign Out</button>
+      <button id="signout-button" class="nes-btn is-warning">Sign Out</button>
     </div>
   </div>
 
@@ -85,25 +85,33 @@
     <div class="content shadow col">
       <h2>Game Over!</h2>
       <button id="leaderboard-button" class="nes-btn is-primary">Leaderboard</button>
-      <button id="play-again-button" class="nes-btn is-primary">Play again</button>
+      <button id="play-again-button" class="nes-btn is-primary">Play Again</button>
       <button id="menu-button" class="nes-btn is-primary">Main Menu</button>
-      <button id="game-over-signout-button" class="nes-btn is-primary">Sign Out</button>
+      <button id="game-over-signout-button" class="nes-btn is-warning">Sign Out</button>
     </div>
   </div>
 
-  <div id="instructions-overlay" class="overlay row">
+  <div id="instructions-overlay" class="overlay row" style="display: none;">
+    <div class="nes-container is-dark with-title">
+      <p class="title">Description</p>
+      <p style="color: aliceblue;">
+        Welcome to 2012: DODGEBALL! Dodge incoming projectiles and race to collect as many gems as possible! Snag power-ups to boost your speed and outmaneuver your opponent. The game ends when time runs out or both players fall—whoever gathers the most gems will claim victory!
+      </p>
+    </div>
     <div class="content shadow col">
       <h2>Instructions</h2>
       <div class="lists">
-        <ul class="nes-lsit is-disc">
+        <ul class="nes-list is-disc" style="text-align: left; margin-left: 1px;">
           <li>Use arrow keys to move</li>
           <li>Collect gems</li>
-          <li>Avoid bombs and fire</li>
+          <li>Avoid projectiles</li>
           <li>Grab boots for a speed boost!</li>
           <li>Press [Space] for a quick dash</li>
         </ul>
       </div>
-      <img id="close-instructions" class="nes-avatar is-rounded is-large" alt="Gravatar image example" src="https://www.gravatar.com/avatar?s=15" style="image-rendering: pixelated;">
+      <!-- <i id="close-instructions" class="nes-icon close is-large" style="cursor: pointer; font-size: 3rem;"></i> -->
+      <button id="close-instructions" type="button" class="nes-btn is-error">close</button>
+
     </div>
   </div>
 
@@ -124,7 +132,7 @@
           <li id="10"></li>
         </ul>
       </div>
-      <img id="close-leaderboard" class="nes-avatar is-rounded is-large" alt="Gravatar image example" src="https://www.gravatar.com/avatar?s=15" style="image-rendering: pixelated;">
+      <button id="close-leaderboard" type="button" class="nes-btn is-error">close</button>
     </div>
   </div>
 
