@@ -35,6 +35,18 @@ const Socket = (function() {
             Game.addExistingRemotePlayers(onlineUsers);
         })
 
+        socket.on("winner", (x) => {
+            let {draw, winner} = x;
+            console.log("is it a draw? ", draw);
+            if (draw) {
+                document.getElementById("draw").textContent = "Draw! No one wins!";
+                document.getElementById("winner").textContent = "";
+            } else {
+                document.getElementById("winner").textContent = (winner.player || winner) + " wins!";
+                document.getElementById("draw").textContent = "";
+            }
+        });
+
         socket.on("leaderboard", (top10) => {
             for (let i = 0; i < top10.length; i++) {
                 let leaderboardRank = '#' + String(i+1);

@@ -192,6 +192,12 @@ const Game = (function (){
             });
         }
     }
+    const emitGetWinner = function () {
+        const socket = window.Socket.getSocket();
+        if (socket){
+            socket.emit("getWinner");
+        }
+    }
 
     // Increases the player speed 
     const increaseSpeed = function (player){
@@ -240,6 +246,7 @@ const Game = (function (){
     // Kill player.
     const killPlayer = function(player) {
         console.log(player + " has died.");
+        sounds.gameover.play();
         if (remotePlayers[player]) {
             remotePlayers[player].die();
         } else {
@@ -397,6 +404,7 @@ const Game = (function (){
             // Only emit the score if the player hasn't died already.
             if(!currPlayer.getCondition()) emitScore();
             emitEndProjectileLoop();
+            emitGetWinner();
             resetGameState();
             // $(document).off("keydown");
             // $(document).off("keyup");
@@ -411,7 +419,6 @@ const Game = (function (){
         }
         // Handle game over for all players dead:
         if(playerIsDead) {
-            sounds.gameover.play();
             for(let remotePlayer in remotePlayers) {
                 // Should only be one remote player...
                 if (remotePlayers[remotePlayer].getCondition()) {
@@ -420,6 +427,7 @@ const Game = (function (){
                     $("#final-gems").html(collectedGems);
                     // Once again, add time survived to end game screen.
                     emitEndProjectileLoop();
+                    emitGetWinner();
                     resetGameState();
                     // reset game state.
                     for (let i = 0; i < difficultyRaised.length; i++) {
