@@ -275,7 +275,7 @@ canvas, #game-start, #game-over, #waiting-overlay {
     height: 480px;
 }
 canvas {
-    background: url(./images/background.png);
+    background: url(./images/terrace.png);
     background-size: cover;
 }
 #game-start, #game-over, #waiting-overlay, #game-wait{
@@ -292,6 +292,9 @@ canvas {
     fill: white;
     text-anchor: middle;
 }
+/* #instructions-overlay{
+    display: none;
+} */
 #waiting-overlay text {
     font-size: 150%;
     fill: white;
@@ -312,3 +315,26 @@ canvas {
     fill: url(#game-over-fill);
     text-anchor: middle;
 }
+
+#instructions-overlay {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 600px;
+    /* background: rgba(0, 0, 0, 0.75); */
+    /* border-radius: 10px; */
+    /* padding: 20px 30px; */
+    color: white;
+    /* font-family: 'Press Start 2P', monospace; */
+    font-size: 18px;
+    line-height: 1.5;
+    text-align: center;
+    /* box-shadow: 0 0 15px rgba(0,0,0,0.8); */
+    user-select: none;
+    z-index: 1000;
+    display: none;
+  }
+
+  

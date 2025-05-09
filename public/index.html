@@ -66,6 +66,7 @@
             <tspan id="final-gems">0</tspan> gem(s).
           </tspan>
         </text>
+        <text x="50%" y="60%">Click anywhere to continue...</text>
     </svg>
   <!-- remove inline style when not needed -->
   <div id="menu-overlay" class="overlay row" style="display: none;">
@@ -77,6 +78,33 @@
       <button id="signout-button" class="nes-btn is-primary">Sign Out</button>
     </div>
   </div>
+
+  <div id="game-over-menu" class="overlay row" style="display: none;">
+    <div class="content shadow col">
+      <h2>Game Over!</h2>
+      <button id="leaderboard-button" class="nes-btn is-primary">Leaderboard</button>
+      <button id="play-again-button" class="nes-btn is-primary">Play again</button>
+      <button id="menu-button" class="nes-btn is-primary">Main Menu</button>
+      <button id="game-over-signout-button" class="nes-btn is-primary">Sign Out</button>
+    </div>
+  </div>
+
+  <div id="instructions-overlay" class="overlay row">
+    <div class="content shadow col">
+      <h2>Instructions</h2>
+      <div class="lists">
+        <ul class="nes-lsit is-disc">
+          <li>Use arrow keys to move</li>
+          <li>Collect gems</li>
+          <li>Avoid bombs and fire</li>
+          <li>Grab boots for a speed boost!</li>
+          <li>Press [Space] for a quick dash</li>
+        </ul>
+      </div>
+      <img id="close-instructions" class="nes-avatar is-rounded is-large" alt="Gravatar image example" src="https://www.gravatar.com/avatar?s=15" style="image-rendering: pixelated;">
+    </div>
+  </div>
+
   <!-- remove inline style when not needed -->
   <div id="signin-overlay" class="overlay row" style="display: none;">
     <div class="content shadow row">
@@ -128,7 +156,7 @@
             SignInForm.hide();
             // UserPanel.update(Authentication.getUser());
             // UserPanel.show();
-
+            Menu.show();
             Socket.connect();
           },
           () => { SignInForm.show(); }

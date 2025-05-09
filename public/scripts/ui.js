@@ -79,6 +79,11 @@ const Menu = (function(){
     const initialize = function(){
         $("#instructions-button").on("click", () => {
             console.log("instructions button clicked bro");
+            $("#instructions-overlay").show();
+        })
+
+        $('#close-instructions').on("click", () => {
+            $("#instructions-overlay").hide();
         })
 
         $("#singleplayer-button").on("click", () => {
@@ -96,7 +101,6 @@ const Menu = (function(){
                 socket.emit("joinMultiplayer");
             }
         })
-    
     
         $("#signout-button").on("click", () => {
             console.log("signout button clicked bro");
@@ -117,6 +121,54 @@ const Menu = (function(){
 
     const hide = function(){
         $("#menu-overlay").show();
+    }
+
+    // return {initialize,hi};
+    return {initialize, show, hide};
+})();
+
+const GameOverMenu = (function(){
+    // Click event for the Single Player button
+    const initialize = function(){
+        $("#leaderboard-button").on("click", () => {
+            // console.log("Leaderboard button clicked bro");
+        })
+
+        $('#menu-button').on("click", () => {
+            $("#game-over-menu").hide();
+            $("#menu-overlay").show()
+            // console.log("Menu button clicked bro");
+        })
+
+        $('#play-again-button').on("click", () => {
+            const socket = window.Socket.getSocket();
+            if(socket){
+                $("#game-over-menu").hide();
+                $("#waiting-overlay").show();
+                socket.emit("joinMultiplayer");
+            }
+        })
+    
+        $("#game-over-signout-button").on("click", () => {
+            console.log("signout button clicked bro");
+            Authentication.signout(
+                () => {
+                    $("#game-over-menu").hide();
+                    console.log("signing out now");
+                    Socket.disconnect();
+                    $("#menu-overlay").hide();
+                    SignInForm.show();
+                }
+            )
+        })
+    };
+
+    const show = function(){
+        $("#game-over-menu").show();
+    }
+
+    const hide = function(){
+        $("#game-over-menu").hide();
     }
 
     // return {initialize,hi};
@@ -306,7 +358,7 @@ const UI = (function() {
 
     // The components of the UI are put here
     // const components = [SignInForm, UserPanel, OnlineUsersPanel, ChatPanel];
-    const components = [SignInForm, Menu];
+    const components = [SignInForm, Menu, GameOverMenu];
 
     // This function initializes the UI
     const initialize = function() {

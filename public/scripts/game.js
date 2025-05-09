@@ -19,7 +19,7 @@ const Game = (function (){
     //     gameover: new Audio("./music/gameover.mp3")
     // };
 
-    const totalGameTime = 30;   // Total game time in seconds
+    const totalGameTime = 10;   // Total game time in seconds
     const gemMaxAge = 3000;     // The maximum age of the gems in milliseconds
     const bootsMaxAge = 2000;   // The maximum age of the boots in milliseconds
     let currPlayer = null;
@@ -56,6 +56,23 @@ const Game = (function (){
     // The Boots powerup
     let boots = Boots(context, 427, 350);
 
+    const resetGameState = function (){
+        console.log("Game is being reset");
+        
+        gameStartTime = 0;
+        collectedGems = 0;
+        // remotePlayers = {};
+        gem = Gem(context, 427, 350, "green"); 
+        boots = Boots(context, 427, 350);
+        currPlayer =  Player(context, 427, 240, gameArea);
+        for (const [name, socketId] of Object.entries(remotePlayers)){
+            remotePlayers[name] = Player(context, 427, 240, gameArea);
+        }
+
+        // currPlayer = null;
+        // currPlayerUsername = null;
+    }
+
     // add a projectile to the queue.
     // command: {direction, {x, y}}
     const addProjectile = function(command) {
@@ -81,7 +98,7 @@ const Game = (function (){
 
     // Function to set up the position of the boots powerup
     const setBoots = function (pos){
-        console.log("Setting the position of the boots");
+        // console.log("Setting the position of the boots");
         bootsPosition = pos;
         boots.randomize(pos);
     }
@@ -178,7 +195,7 @@ const Game = (function (){
 
     // Increases the player speed 
     const increaseSpeed = function (player){
-        console.log(player + "'s speed increased");
+        // console.log(player + "'s speed increased");
         if(remotePlayers[player]){
             remotePlayers[player].speedUp();
         }
@@ -197,7 +214,7 @@ const Game = (function (){
 
     // Increases the player speed 
     const decreaseSpeed = function (player){
-        console.log(player + "'s speed decreased");
+        // console.log(player + "'s speed decreased");
         if(remotePlayers[player]){
             remotePlayers[player].slowDown();
         }
@@ -270,13 +287,15 @@ const Game = (function (){
         boots.randomize(bootsPosition);
         emitStartProjectileLoop();
         // console.log(gameArea.getPoints());
-
+        
+        $(document).off("keydown");
+        $(document).off("keyup");
         /* Handle the keydown of arrow keys and spacebar */
         $(document).on("keydown", function(event) {
             /* TODO */
             /* Handle the key down */
             let moveNum;
-            console.log(currPlayerUsername + " receiving key down ");
+            // console.log(currPlayerUsername + " receiving key down ");
             if(event.keyCode == 37){
                 // currPlayer.move(1);
                 moveNum = 1;
@@ -306,7 +325,7 @@ const Game = (function (){
             /* TODO */
             /* Handle the key up */
             let moveNum;
-            console.log(currPlayerUsername + " receiving key down ");
+            // console.log(currPlayerUsername + " receiving key down ");
             if(event.keyCode == 37){
                 // currPlayer.stop(1);
                 moveNum = 1;
@@ -376,6 +395,9 @@ const Game = (function (){
             // Only emit the score if the player hasn't died already.
             if(!currPlayer.getCondition()) emitScore();
             emitEndProjectileLoop();
+            resetGameState();
+            // $(document).off("keydown");
+            // $(document).off("keyup");
             // reset game state.
             for (let i = 0; i < difficultyRaised.length; i++) {
                 difficultyRaised[i] = false;
@@ -468,8 +490,8 @@ const Game = (function (){
             // sounds.collect.play();
         }
 
-        if(playerBoundingBox.isPointInBox(boostPos.x, boostPos.y) && !playerIsDead){
-            console.log("Collected boots powerup");
+        if(playerBoundingBox.isPointInBox(boostPos.x, boostPos.y)){
+            // console.log("Collected boots powerup");
             getBootsPos();
             // sounds.collect.play();
             emitSpeedUp()
@@ -504,6 +526,12 @@ const Game = (function (){
     $("#game-start").on("click", function() {
         startGame();
     });
+
+    // Handle the end of the game
+    $("#game-over").on("click", () => {
+        $("#game-over").hide();
+        $("#game-over-menu").show();
+    })
 
     return {
         addNewRemotePlayer,
