@@ -26,6 +26,7 @@ const Game = (function (){
     let currPlayerUsername = null;
     let gameStartTime = 0;      // The timestamp when the game starts
     let collectedGems = 0;      // The number of gems collected in the game
+    let timeSurvived = 0;       // Time in seconds the user survived for.
     let remotePlayers = {};
     let gemColor, gemPosition, bootsPosition;
     // Keep track of difficulty raises for projectile difficulty.
@@ -161,12 +162,17 @@ const Game = (function (){
     }
 
     // Emits number of gems collected by current player
-    const emitCollectedGems = function (){
+    const emitScore = function (){
         // console.log("Emitting collected Gems");
         
         const socket = window.Socket.getSocket();
         if(socket){
-            socket.emit("logCollectedGems", {player:currPlayerUsername, collectedGems:collectedGems});
+            socket.emit("logScore", 
+            { 
+                player:currPlayerUsername, 
+                collectedGems:collectedGems,
+                timeSurvived: timeSurvived
+            });
         }
     }
 
@@ -357,13 +363,18 @@ const Game = (function (){
             emitRaiseProjectileDifficulty();
         }
 
-
+        let playerIsDead = currPlayer.getCondition();
         /* TODO */
         /* Handle the game over situation here */
         if(timeRemaining == 0){
+            // If not dead by the end, then time survived is total game time.
+            if (!playerIsDead) timeSurvived = totalGameTime;
             $("#game-over").show();
+            $("#time-survived").html(timeSurvived);
             $("#final-gems").html(collectedGems);
-            emitCollectedGems();
+            // add time survived id to html.
+            // Only emit the score if the player hasn't died already.
+            if(!currPlayer.getCondition()) emitScore();
             emitEndProjectileLoop();
             // reset game state.
             for (let i = 0; i < difficultyRaised.length; i++) {
@@ -375,14 +386,14 @@ const Game = (function (){
             return;
         }
         // Handle game over for all players dead:
-        let playerIsDead = currPlayer.getCondition();
         if(playerIsDead) {
             for(let remotePlayer in remotePlayers) {
                 // Should only be one remote player...
                 if (remotePlayers[remotePlayer].getCondition()) {
                     $("#game-over").show();
+                    $("#time-survived").html(timeSurvived);
                     $("#final-gems").html(collectedGems);
-                    emitCollectedGems();
+                    // Once again, add time survived to end game screen.
                     emitEndProjectileLoop();
                     // reset game state.
                     for (let i = 0; i < difficultyRaised.length; i++) {
@@ -440,7 +451,10 @@ const Game = (function (){
                 if (playerBoundingBox.intersect(projBB)) {
                     console.log("myPlayer has hit a projectile");
                     // currPlayer.die() executes after server notifies all players.
+                    // This also emits the current player's score.
                     emitHitProjectile();
+                    timeSurvived = totalGameTime - timeRemaining;
+                    emitScore();
                     break;
                 }
             }

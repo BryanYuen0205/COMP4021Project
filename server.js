@@ -357,12 +357,40 @@ io.on("connection", (socket) => {
             io.emit("setBootsPos", {x,y})
         })
 
-        socket.on("logCollectedGems", ({player, collectedGems}) => {
-            console.log("logging collected gems");
-            console.log(player);
-            console.log(collectedGems);        
+        socket.on("logScore", ({player, collectedGems, timeSurvived}) => {
             let score = JSON.parse(fs.readFileSync("data/leaderboard.json"));
-            score[player] = collectedGems;
+            // Case for if player already has a score in the database.
+            if (player in score) {
+                if (score[player].timeSurvived < timeSurvived) {
+                    console.log(player 
+                        + " survived longer this time. %i > %i",
+                        timeSurvived, score[player].timeSurvived);
+                    console.log("Logging better score...")
+                    console.log(player);
+                    console.log(collectedGems);   
+                    console.log(timeSurvived);  
+                    score[player] = {collectedGems, timeSurvived};
+                } 
+                else if (score[player].timeSurvived == timeSurvived
+                      && score[player].collectedGems < collectedGems) 
+                {
+                    console.log(player 
+                        + " collected more gems with the same time. %i > %i",
+                        collectedGems, score[player].collectedGems);
+                    console.log("Logging better score...")
+                    console.log(player);
+                    console.log(collectedGems);   
+                    console.log(timeSurvived);  
+                    score[player] = {collectedGems, timeSurvived};
+                }
+            } else // case where no entry is found.
+            {
+                console.log("No previous leaderboard entry found. Logging.")
+                console.log(player);
+                console.log(collectedGems);   
+                console.log(timeSurvived);  
+                score[player] = {collectedGems, timeSurvived};
+            }
             fs.writeFileSync("data/leaderboard.json", JSON.stringify(score, null, " "));
         })
 
